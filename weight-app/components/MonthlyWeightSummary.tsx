@@ -40,7 +40,8 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
     load();
   }, [load]);
 
-  const months = buildMonthStats(weights, startingWeight);
+  // Más reciente primero, se lee mejor en el celu.
+  const months = buildMonthStats(weights, startingWeight).reverse();
 
   return (
     <div className="card p-5">
@@ -51,8 +52,7 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
         </p>
       </div>
       <p className="text-xs text-soft mb-4">
-        Promedio de cada mes, cuánto cambió respecto al anterior, y cuánto
-        llevás acumulado desde tu peso inicial
+        Promedio de cada mes y cuánto llevás acumulado desde tu peso inicial
         {startingWeight ? ` (${startingWeight} kg)` : ""}.
       </p>
 
@@ -63,53 +63,39 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
           Todavía no hay suficientes registros de peso.
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-soft">
-                <th className="font-normal pb-2 pr-3">Mes</th>
-                <th className="font-normal pb-2 pr-3">Promedio</th>
-                <th className="font-normal pb-2 pr-3">Vs. mes anterior</th>
-                <th className="font-normal pb-2">Desde el inicio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {months.map((m) => (
-                <tr key={m.key} className="border-t border-line">
-                  <td className="py-2.5 pr-3 text-ink whitespace-nowrap">
-                    {m.label}
-                  </td>
-                  <td className="py-2.5 pr-3 font-mono text-ink">
-                    {m.avg.toFixed(1)} kg
-                  </td>
-                  <td className="py-2.5 pr-3 font-mono">
-                    {m.changeVsPrev === null ? (
-                      <span className="text-soft">—</span>
-                    ) : (
-                      <span className={deltaColor(m.changeVsPrev)}>
-                        {m.changeVsPrev > 0 ? "+" : ""}
-                        {m.changeVsPrev.toFixed(1)} kg
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2.5 font-mono">
-                    <span className={deltaColor(m.changeSinceStart)}>
-                      {m.changeSinceStart > 0 ? "+" : ""}
-                      {m.changeSinceStart.toFixed(1)} kg
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="divide-y divide-line">
+          {months.map((m) => (
+            <div
+              key={m.key}
+              className="py-3 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm text-ink truncate">{m.label}</p>
+                {m.changeVsPrev !== null && (
+                  <p className={`text-xs mt-0.5 ${deltaColor(m.changeVsPrev)}`}>
+                    {m.changeVsPrev > 0 ? "+" : ""}
+                    {m.changeVsPrev.toFixed(1)} kg vs. mes anterior
+                  </p>
+                )}
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-mono text-sm text-ink">
+                  {m.avg.toFixed(1)} kg
+                </p>
+                <p className={`text-xs mt-0.5 ${deltaColor(m.changeSinceStart)}`}>
+                  {m.changeSinceStart > 0 ? "+" : ""}
+                  {m.changeSinceStart.toFixed(1)} kg desde el inicio
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {!loading && !startingWeight && months.length > 0 && (
         <p className="text-xs text-soft mt-3">
-          Cargá tu peso inicial arriba, en la tarjeta de objetivo, para que
-          "Desde el inicio" se calcule desde ese valor en vez del primer
-          registro.
+          Cargá tu peso inicial en la tarjeta de objetivo para que "desde el
+          inicio" se calcule desde ese valor en vez del primer registro.
         </p>
       )}
     </div>
@@ -130,7 +116,7 @@ function buildMonthStats(
 
   const byMonth = new Map<string, number[]>();
   for (const w of weights) {
-    const key = w.date.slice(0, 7); // "YYYY-MM"
+    const key = w.date.slice(0, 7);
     if (!byMonth.has(key)) byMonth.set(key, []);
     byMonth.get(key)!.push(w.weight);
   }
