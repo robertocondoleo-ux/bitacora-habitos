@@ -3,13 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isoDaysAgo } from "@/lib/dates";
-import { Target } from "lucide-react";
+import { Target, Flag, Pencil } from "lucide-react";
 
 type Weight = { date: string; weight: number };
 
 export default function GoalCard({ userId }: { userId: string }) {
   const [goal, setGoal] = useState<string>("");
-  const [editing, setEditing] = useState(false);
+  const [starting, setStarting] = useState<string>("");
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [editingStart, setEditingStart] = useState(false);
   const [saving, setSaving] = useState(false);
   const [weights, setWeights] = useState<Weight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function GoalCard({ userId }: { userId: string }) {
     const [{ data: profile }, { data: w }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("goal_weight")
+        .select("goal_weight, starting_weight")
         .eq("id", userId)
         .single(),
       supabase
@@ -29,50 +31,58 @@ export default function GoalCard({ userId }: { userId: string }) {
         .order("date", { ascending: true }),
     ]);
     if (profile?.goal_weight) setGoal(String(profile.goal_weight));
+    if (profile?.starting_weight)
+      setStarting(String(profile.starting_weight));
     setWeights((w as Weight[]) || []);
     setLoading(false);
+    // Si es un usuario nuevo sin peso inicial cargado, abrimos el campo
+    // directamente para invitarlo a completarlo.
+    if (!profile?.starting_weight) setEditingStart(true);
   }, [userId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  async function saveGoal() {
+  async function saveField(field: "goal_weight" | "starting_weight", raw: string) {
     setSaving(true);
-    const value = goal ? parseFloat(goal) : null;
+    const value = raw ? parseFloat(raw) : null;
     await supabase
       .from("profiles")
-      .update({ goal_weight: value })
+      .update({ [field]: value })
       .eq("id", userId);
     setSaving(false);
-    setEditing(false);
   }
 
   const trend = computeTrend(weights, goal ? parseFloat(goal) : null);
 
   return (
     <div className="card p-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-4">
+        {/* Peso inicial */}
         <div>
           <div className="flex items-center gap-2">
-            <Target size={15} className="text-clay" strokeWidth={2} />
+            <Flag size={15} className="text-clay" strokeWidth={2} />
             <p className="text-xs uppercase tracking-wide text-soft">
-              Objetivo de peso
+              Peso inicial
             </p>
           </div>
-          {editing ? (
+          {editingStart ? (
             <div className="flex items-center gap-2 mt-1">
               <input
                 type="number"
                 step="0.1"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className="w-28"
+                value={starting}
+                onChange={(e) => setStarting(e.target.value)}
+                className="w-24"
                 autoFocus
+                placeholder="kg"
               />
-              <span className="text-sm text-soft">kg</span>
               <button
-                onClick={saveGoal}
+                onClick={async () => {
+                  await saveField("starting_weight", starting);
+                  setEditingStart(false);
+                }}
                 disabled={saving}
                 className="btn-primary text-sm px-3 py-1.5"
               >
@@ -81,17 +91,69 @@ export default function GoalCard({ userId }: { userId: string }) {
             </div>
           ) : (
             <button
-              onClick={() => setEditing(true)}
-              className="font-display text-2xl text-ink mt-1"
+              onClick={() => setEditingStart(true)}
+              className="group flex items-center gap-1.5 mt-1"
             >
-              {goal ? `${goal} kg` : "Definir objetivo →"}
+              <span className="font-display text-2xl text-ink">
+                {starting ? `${starting} kg` : "Cargar →"}
+              </span>
+              <Pencil
+                size={13}
+                className="text-soft opacity-0 group-hover:opacity-100 transition"
+              />
+            </button>
+          )}
+        </div>
+
+        {/* Objetivo */}
+        <div>
+          <div className="flex items-center gap-2">
+            <Target size={15} className="text-clay" strokeWidth={2} />
+            <p className="text-xs uppercase tracking-wide text-soft">
+              Objetivo
+            </p>
+          </div>
+          {editingGoal ? (
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="number"
+                step="0.1"
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                className="w-24"
+                autoFocus
+                placeholder="kg"
+              />
+              <button
+                onClick={async () => {
+                  await saveField("goal_weight", goal);
+                  setEditingGoal(false);
+                }}
+                disabled={saving}
+                className="btn-primary text-sm px-3 py-1.5"
+              >
+                Guardar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditingGoal(true)}
+              className="group flex items-center gap-1.5 mt-1"
+            >
+              <span className="font-display text-2xl text-ink">
+                {goal ? `${goal} kg` : "Definir →"}
+              </span>
+              <Pencil
+                size={13}
+                className="text-soft opacity-0 group-hover:opacity-100 transition"
+              />
             </button>
           )}
         </div>
 
         {!loading && (
           <div
-            className={`px-4 py-2 rounded-xl text-sm max-w-xs ${trend.color}`}
+            className={`px-4 py-2 rounded-xl text-sm max-w-xs self-center ${trend.color}`}
           >
             {trend.message}
           </div>

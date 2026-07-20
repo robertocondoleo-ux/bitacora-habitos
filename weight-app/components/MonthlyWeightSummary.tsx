@@ -15,15 +15,24 @@ type MonthStat = {
 
 export default function MonthlyWeightSummary({ userId }: { userId: string }) {
   const [weights, setWeights] = useState<Weight[]>([]);
+  const [startingWeight, setStartingWeight] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("weights")
-      .select("date, weight")
-      .eq("user_id", userId)
-      .order("date", { ascending: true });
-    setWeights((data as Weight[]) || []);
+    const [{ data: profile }, { data: w }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("starting_weight")
+        .eq("id", userId)
+        .single(),
+      supabase
+        .from("weights")
+        .select("date, weight")
+        .eq("user_id", userId)
+        .order("date", { ascending: true }),
+    ]);
+    setStartingWeight(profile?.starting_weight ?? null);
+    setWeights((w as Weight[]) || []);
     setLoading(false);
   }, [userId]);
 
@@ -31,7 +40,7 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
     load();
   }, [load]);
 
-  const months = buildMonthStats(weights);
+  const months = buildMonthStats(weights, startingWeight);
 
   return (
     <div className="card p-5">
@@ -43,7 +52,8 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
       </div>
       <p className="text-xs text-soft mb-4">
         Promedio de cada mes, cuánto cambió respecto al anterior, y cuánto
-        llevás acumulado desde tu primer registro.
+        llevás acumulado desde tu peso inicial
+        {startingWeight ? ` (${startingWeight} kg)` : ""}.
       </p>
 
       {loading ? (
@@ -94,6 +104,14 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
           </table>
         </div>
       )}
+
+      {!loading && !startingWeight && months.length > 0 && (
+        <p className="text-xs text-soft mt-3">
+          Cargá tu peso inicial arriba, en la tarjeta de objetivo, para que
+          "Desde el inicio" se calcule desde ese valor en vez del primer
+          registro.
+        </p>
+      )}
     </div>
   );
 }
@@ -104,7 +122,10 @@ function deltaColor(delta: number) {
   return "text-soft";
 }
 
-function buildMonthStats(weights: Weight[]): MonthStat[] {
+function buildMonthStats(
+  weights: Weight[],
+  startingWeight: number | null
+): MonthStat[] {
   if (weights.length === 0) return [];
 
   const byMonth = new Map<string, number[]>();
@@ -115,7 +136,7 @@ function buildMonthStats(weights: Weight[]): MonthStat[] {
   }
 
   const keys = Array.from(byMonth.keys()).sort();
-  const startAvg = average(byMonth.get(keys[0])!);
+  const baseline = startingWeight ?? average(byMonth.get(keys[0])!);
 
   let prevAvg: number | null = null;
   const stats: MonthStat[] = keys.map((key) => {
@@ -127,7 +148,7 @@ function buildMonthStats(weights: Weight[]): MonthStat[] {
       label: monthLabel(key),
       avg,
       changeVsPrev,
-      changeSinceStart: avg - startAvg,
+      changeSinceStart: avg - baseline,
     };
   });
 

@@ -16,7 +16,7 @@ export default function QuickStats({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     const today = todayISO();
 
-    const [{ data: weights }, { data: steps }, { data: habits }, { data: logs }] =
+    const [{ data: weights }, { data: steps }, { data: habits }, { data: logs }, { data: profile }] =
       await Promise.all([
         supabase
           .from("weights")
@@ -40,13 +40,18 @@ export default function QuickStats({ userId }: { userId: string }) {
           .eq("user_id", userId)
           .eq("date", today)
           .eq("checked", true),
+        supabase
+          .from("profiles")
+          .select("starting_weight")
+          .eq("id", userId)
+          .single(),
       ]);
 
     if (weights && weights.length > 0) {
-      setCurrentWeight(weights[weights.length - 1].weight);
-      setTotalChange(
-        weights[weights.length - 1].weight - weights[0].weight
-      );
+      const latest = weights[weights.length - 1].weight;
+      const baseline = profile?.starting_weight ?? weights[0].weight;
+      setCurrentWeight(latest);
+      setTotalChange(latest - baseline);
     }
     setStepsToday(steps ? (steps as { steps: number }).steps : null);
     setHabitsTotal((habits || []).length);
