@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO, isoDaysAgo, formatShort } from "@/lib/dates";
+import { Scale } from "lucide-react";
 
 type Weight = { date: string; weight: number };
 
@@ -59,12 +60,16 @@ export default function WeightSection({ userId }: { userId: string }) {
 
   return (
     <div className="card p-5">
-      <p className="text-xs uppercase tracking-wide text-soft mb-3">Peso</p>
+      <div className="flex items-center gap-2 mb-3">
+        <Scale size={15} className="text-clay" strokeWidth={2} />
+        <p className="text-xs uppercase tracking-wide text-soft">Peso</p>
+      </div>
 
       <form onSubmit={handleSave} className="flex gap-2 mb-4">
         <input
           type="date"
           value={date}
+          max={todayISO()}
           onChange={(e) => setDate(e.target.value)}
           className="w-36"
         />
@@ -77,11 +82,7 @@ export default function WeightSection({ userId }: { userId: string }) {
           className="w-24"
           required
         />
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-ink text-paper px-4 rounded-lg text-sm"
-        >
+        <button type="submit" disabled={saving} className="btn-primary px-4 text-sm">
           Guardar
         </button>
       </form>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isoDaysAgo, formatShort, todayISO } from "@/lib/dates";
+import { ListChecks } from "lucide-react";
 
 type Habit = { id: string; name: string };
 type Log = { habit_id: string; date: string; checked: boolean };
@@ -90,9 +91,12 @@ export default function HabitsSection({ userId }: { userId: string }) {
 
   return (
     <div className="card p-5">
-      <p className="text-xs uppercase tracking-wide text-soft mb-3">
-        Hábitos diarios
-      </p>
+      <div className="flex items-center gap-2 mb-3">
+        <ListChecks size={15} className="text-clay" strokeWidth={2} />
+        <p className="text-xs uppercase tracking-wide text-soft">
+          Hábitos diarios
+        </p>
+      </div>
 
       <form onSubmit={addHabit} className="flex gap-2 mb-4">
         <input
@@ -103,7 +107,7 @@ export default function HabitsSection({ userId }: { userId: string }) {
         />
         <button
           type="submit"
-          className="bg-ink text-paper px-4 rounded-lg text-sm whitespace-nowrap"
+          className="btn-primary px-4 text-sm whitespace-nowrap"
         >
           Agregar
         </button>
@@ -145,10 +149,10 @@ export default function HabitsSection({ userId }: { userId: string }) {
                       <button
                         onClick={() => toggle(h.id, d)}
                         aria-label={`${h.name} ${d}`}
-                        className={`w-6 h-6 rounded-md border transition ${
+                        className={`w-6 h-6 rounded-lg border transition-all active:scale-90 ${
                           isChecked(h.id, d)
-                            ? "bg-moss border-moss"
-                            : "bg-panel border-line hover:border-soft"
+                            ? "bg-moss border-moss shadow-sm"
+                            : "bg-panel border-line hover:border-soft hover:bg-line/30"
                         }`}
                       />
                     </td>

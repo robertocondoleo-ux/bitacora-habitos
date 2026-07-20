@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isoDaysAgo } from "@/lib/dates";
+import { Target } from "lucide-react";
 
 type Weight = { date: string; weight: number };
 
@@ -53,9 +54,12 @@ export default function GoalCard({ userId }: { userId: string }) {
     <div className="card p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-soft">
-            Objetivo de peso
-          </p>
+          <div className="flex items-center gap-2">
+            <Target size={15} className="text-clay" strokeWidth={2} />
+            <p className="text-xs uppercase tracking-wide text-soft">
+              Objetivo de peso
+            </p>
+          </div>
           {editing ? (
             <div className="flex items-center gap-2 mt-1">
               <input
@@ -70,7 +74,7 @@ export default function GoalCard({ userId }: { userId: string }) {
               <button
                 onClick={saveGoal}
                 disabled={saving}
-                className="text-sm bg-ink text-paper px-3 py-1.5 rounded-lg"
+                className="btn-primary text-sm px-3 py-1.5"
               >
                 Guardar
               </button>
@@ -87,7 +91,7 @@ export default function GoalCard({ userId }: { userId: string }) {
 
         {!loading && (
           <div
-            className={`px-4 py-2 rounded-lg text-sm max-w-xs ${trend.color}`}
+            className={`px-4 py-2 rounded-xl text-sm max-w-xs ${trend.color}`}
           >
             {trend.message}
           </div>

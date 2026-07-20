@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO, isoDaysAgo, formatShort } from "@/lib/dates";
+import { UtensilsCrossed } from "lucide-react";
 
 type Meal = {
   id: string;
@@ -59,9 +60,10 @@ export default function MealsSection({ userId }: { userId: string }) {
 
   return (
     <div className="card p-5">
-      <p className="text-xs uppercase tracking-wide text-soft mb-3">
-        Comidas
-      </p>
+      <div className="flex items-center gap-2 mb-3">
+        <UtensilsCrossed size={15} className="text-clay" strokeWidth={2} />
+        <p className="text-xs uppercase tracking-wide text-soft">Comidas</p>
+      </div>
 
       <form
         onSubmit={handleSave}
@@ -70,6 +72,7 @@ export default function MealsSection({ userId }: { userId: string }) {
         <input
           type="date"
           value={date}
+          max={todayISO()}
           onChange={(e) => setDate(e.target.value)}
           className="sm:w-36"
         />
@@ -90,11 +93,7 @@ export default function MealsSection({ userId }: { userId: string }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-ink text-paper px-4 rounded-lg text-sm"
-        >
+        <button type="submit" disabled={saving} className="btn-primary px-4 text-sm">
           Agregar
         </button>
       </form>

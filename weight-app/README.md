@@ -34,6 +34,35 @@ Todo se puede correr con planes gratuitos (Supabase Free + Vercel Hobby).
 
 ---
 
+## Paso 1.5 — Importar tu historial desde tu planilla de Excel
+
+Ya tenés cargado un archivo de seguimiento (`import_datos.sql`) con tus datos
+reales extraídos de tu Excel: **38 registros de peso** (desde el 23/12 con
+105 kg hasta julio con 79,8 kg), tu objetivo de **78 kg**, y tus **12
+hábitos** con los checks diarios de julio (Desayuno, Dientes mañana, 2 Litros
+de agua, Entrenamiento, Caminar 10.000 pasos, Mate, Comida sana, Creatina,
+Dientes noche, Crema pies, Crema brazos, Sin gaseosa). No incluye la
+Metformina, como pediste.
+
+Para importarlo:
+
+1. Primero necesitás un usuario creado. Corré la app (local o ya
+   desplegada) y registrate con tu email y contraseña (Paso 2 o 4).
+2. En Supabase, andá a **Authentication → Users** y copiá el **UID** (un
+   código largo tipo `a1b2c3d4-...`) de tu usuario recién creado.
+3. Abrí el archivo `supabase/import_datos.sql` de este proyecto y reemplazá
+   donde dice `'TU_USER_ID'` por ese UID (entre comillas simples).
+4. Pegá el contenido completo en **SQL Editor → New query** de Supabase y
+   tocá **Run**.
+5. Recargá el dashboard de la app — vas a ver todo tu historial de peso, el
+   objetivo y los hábitos con los checks de julio ya cargados.
+
+Podés correr este script una sola vez; si lo corrés de nuevo no duplica
+hábitos, pero sí puede duplicar días de peso ya cargados manualmente después
+(usa "actualizar" en vez de duplicar, así que no pasa nada grave).
+
+---
+
 ## Paso 2 — Probar la app en tu computadora (opcional pero recomendado)
 
 Necesitás tener [Node.js](https://nodejs.org) instalado (versión 18 o
@@ -120,6 +149,31 @@ nivel de base de datos con Row Level Security en Supabase).
 
 ---
 
+## Instalarla como app en el celular
+
+La app ahora es una **PWA** (Progressive Web App): se puede "instalar" desde
+el navegador y queda como un ícono más en tu celular, abriendo en pantalla
+completa (sin la barra de direcciones del navegador).
+
+**Android (Chrome):**
+1. Abrí tu URL de Vercel en Chrome.
+2. Iniciá sesión.
+3. Chrome puede mostrar automáticamente un banner "Instalar app" — tocalo. Si
+   no aparece, tocá los tres puntitos (⋮) arriba a la derecha → **"Instalar
+   app"** (o "Agregar a pantalla de inicio").
+4. Confirmá.
+
+**iPhone (tiene que ser Safari, no Chrome):**
+1. Abrí tu URL en Safari.
+2. Tocá el ícono de compartir (el cuadrado con flecha hacia arriba).
+3. Deslizá y tocá **"Agregar a pantalla de inicio"**.
+4. Confirmá.
+
+En ambos casos te va a quedar un ícono propio (el monograma "B") y al abrirlo
+entra directo, sin ver el navegador por arriba.
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -129,11 +183,14 @@ weight-app/
     login/page.tsx       → login y registro
     dashboard/page.tsx   → pantalla principal
   components/
-    GoalCard.tsx         → objetivo + tendencia
-    WeightSection.tsx     → carga y gráfico de peso
-    StepsSection.tsx      → carga y gráfico de pasos
-    HabitsSection.tsx     → hábitos personalizados (grilla semanal)
-    MealsSection.tsx      → registro de comidas
+    QuickStats.tsx          → tarjetas de resumen rápido (peso, cambio, pasos, hábitos de hoy)
+    GoalCard.tsx             → objetivo + tendencia
+    WeightSection.tsx        → carga y gráfico de peso
+    MonthlyWeightSummary.tsx → tabla de peso promedio por mes, cambio y acumulado
+    StepsSection.tsx         → carga y gráfico de pasos
+    HabitsSection.tsx        → hábitos personalizados (grilla semanal)
+    MonthlyHabitsSummary.tsx → % de cumplimiento por hábito y mes
+    MealsSection.tsx         → registro de comidas
   lib/
     supabaseClient.ts     → conexión a Supabase
     dates.ts               → utilidades de fechas
