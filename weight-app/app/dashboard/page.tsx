@@ -9,6 +9,7 @@ import HomeSummary from "@/components/HomeSummary";
 import GoalCard from "@/components/GoalCard";
 import WeightSection from "@/components/WeightSection";
 import MonthlyWeightSummary from "@/components/MonthlyWeightSummary";
+import StepsSection from "@/components/StepsSection";
 import HabitsSection from "@/components/HabitsSection";
 import MonthlyHabitsSummary from "@/components/MonthlyHabitsSummary";
 import MealsSection from "@/components/MealsSection";
@@ -90,6 +91,7 @@ export default function Dashboard() {
           <>
             <GoalCard userId={user.id} />
             <WeightSection userId={user.id} />
+            <StepsSection userId={user.id} />
             <MonthlyWeightSummary userId={user.id} />
           </>
         )}
