@@ -8,6 +8,7 @@ import { LogOut, Home, Scale, Footprints, ListChecks, UtensilsCrossed } from "lu
 import HomeSummary from "@/components/HomeSummary";
 import GoalCard from "@/components/GoalCard";
 import WeightSection from "@/components/WeightSection";
+import MonthlyWeightEntry from "@/components/MonthlyWeightEntry";
 import MonthlyWeightSummary from "@/components/MonthlyWeightSummary";
 import StepsGoalCard from "@/components/StepsGoalCard";
 import StepsSection from "@/components/StepsSection";
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("inicio");
+  const [weightRefresh, setWeightRefresh] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -92,8 +94,15 @@ export default function Dashboard() {
         {tab === "peso" && (
           <>
             <GoalCard userId={user.id} />
-            <WeightSection userId={user.id} />
-            <MonthlyWeightSummary userId={user.id} />
+            <WeightSection key={`daily-${weightRefresh}`} userId={user.id} />
+            <MonthlyWeightEntry
+              userId={user.id}
+              onSaved={() => setWeightRefresh((k) => k + 1)}
+            />
+            <MonthlyWeightSummary
+              key={`summary-${weightRefresh}`}
+              userId={user.id}
+            />
           </>
         )}
 

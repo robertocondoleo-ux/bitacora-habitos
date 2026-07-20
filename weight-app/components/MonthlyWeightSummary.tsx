@@ -40,8 +40,7 @@ export default function MonthlyWeightSummary({ userId }: { userId: string }) {
     load();
   }, [load]);
 
-  // Más reciente primero, se lee mejor en el celu.
-  const months = buildMonthStats(weights, startingWeight).reverse();
+  const months = buildMonthStats(weights, startingWeight);
 
   return (
     <div className="card p-5">
