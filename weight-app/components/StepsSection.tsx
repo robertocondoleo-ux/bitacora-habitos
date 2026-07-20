@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceLine,
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
@@ -18,19 +20,28 @@ type StepEntry = { date: string; steps: number };
 
 export default function StepsSection({ userId }: { userId: string }) {
   const [entries, setEntries] = useState<StepEntry[]>([]);
+  const [goal, setGoal] = useState<number | null>(null);
   const [value, setValue] = useState("");
   const [date, setDate] = useState(todayISO());
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("steps")
-      .select("date, steps")
-      .eq("user_id", userId)
-      .gte("date", isoDaysAgo(14))
-      .order("date", { ascending: true });
+    const [{ data }, { data: profile }] = await Promise.all([
+      supabase
+        .from("steps")
+        .select("date, steps")
+        .eq("user_id", userId)
+        .gte("date", isoDaysAgo(14))
+        .order("date", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("steps_goal")
+        .eq("id", userId)
+        .single(),
+    ]);
     setEntries((data as StepEntry[]) || []);
+    setGoal(profile?.steps_goal ?? null);
     setLoading(false);
   }, [userId]);
 
@@ -106,7 +117,32 @@ export default function StepsSection({ userId }: { userId: string }) {
                   borderColor: "#E4DFD3",
                 }}
               />
-              <Bar dataKey="steps" fill="#D9A441" radius={[4, 4, 0, 0]} />
+              {goal !== null && (
+                <ReferenceLine
+                  y={goal}
+                  stroke="#1C2321"
+                  strokeDasharray="5 4"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `Objetivo: ${goal.toLocaleString("es-AR")}`,
+                    fontSize: 10,
+                    fill: "#1C2321",
+                    position: "insideTopRight",
+                  }}
+                />
+              )}
+              <Bar dataKey="steps" radius={[4, 4, 0, 0]}>
+                {chartData.map((entry, i) => (
+                  <Cell
+                    key={i}
+                    fill={
+                      goal !== null && entry.steps >= goal
+                        ? "#4B5E4A"
+                        : "#D9A441"
+                    }
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

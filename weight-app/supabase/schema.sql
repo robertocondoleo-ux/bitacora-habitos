@@ -11,8 +11,12 @@ create table if not exists profiles (
   email text,
   goal_weight numeric,
   starting_weight numeric,
+  steps_goal integer,
   created_at timestamptz default now()
 );
+
+-- Por si la tabla ya existía de una instalación anterior sin esta columna.
+alter table profiles add column if not exists steps_goal integer;
 
 -- Crea automáticamente un perfil cuando alguien se registra
 create or replace function public.handle_new_user()

@@ -4,21 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
-import { LogOut, Home, Scale, ListChecks, UtensilsCrossed } from "lucide-react";
+import { LogOut, Home, Scale, Footprints, ListChecks, UtensilsCrossed } from "lucide-react";
 import HomeSummary from "@/components/HomeSummary";
 import GoalCard from "@/components/GoalCard";
 import WeightSection from "@/components/WeightSection";
 import MonthlyWeightSummary from "@/components/MonthlyWeightSummary";
+import StepsGoalCard from "@/components/StepsGoalCard";
 import StepsSection from "@/components/StepsSection";
 import HabitsSection from "@/components/HabitsSection";
 import MonthlyHabitsSummary from "@/components/MonthlyHabitsSummary";
 import MealsSection from "@/components/MealsSection";
 
-type Tab = "inicio" | "peso" | "habitos" | "comidas";
+type Tab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
 
 const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: "inicio", label: "Inicio", icon: Home },
   { id: "peso", label: "Peso", icon: Scale },
+  { id: "pasos", label: "Pasos", icon: Footprints },
   { id: "habitos", label: "Hábitos", icon: ListChecks },
   { id: "comidas", label: "Comidas", icon: UtensilsCrossed },
 ];
@@ -91,8 +93,14 @@ export default function Dashboard() {
           <>
             <GoalCard userId={user.id} />
             <WeightSection userId={user.id} />
-            <StepsSection userId={user.id} />
             <MonthlyWeightSummary userId={user.id} />
+          </>
+        )}
+
+        {tab === "pasos" && (
+          <>
+            <StepsGoalCard userId={user.id} />
+            <StepsSection userId={user.id} />
           </>
         )}
 
@@ -107,7 +115,7 @@ export default function Dashboard() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-panel/95 backdrop-blur border-t border-line z-10">
-        <div className="max-w-lg mx-auto grid grid-cols-4">
+        <div className="max-w-lg mx-auto grid grid-cols-5">
           {TABS.map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;

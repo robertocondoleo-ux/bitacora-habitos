@@ -149,6 +149,21 @@ nivel de base de datos con Row Level Security en Supabase).
 
 ---
 
+## Migración: objetivo de pasos diarios
+
+Si tu base de Supabase ya estaba creada de antes (como la tuya), hace falta
+correr una migración chiquita una sola vez para agregar el campo del
+objetivo de pasos:
+
+1. Andá al **SQL Editor** de Supabase → **New query**.
+2. Pegá el contenido de `supabase/migration_steps_goal.sql`.
+3. Click en **Run**.
+
+Si vas a instalar la app desde cero (nunca corriste `schema.sql` todavía),
+no hace falta este paso: ya está incluido ahí directamente.
+
+---
+
 ## Instalarla como app en el celular
 
 La app ahora es una **PWA** (Progressive Web App): se puede "instalar" desde
