@@ -100,6 +100,39 @@ create table if not exists training_logs (
   created_at timestamptz default now()
 );
 
+-- Estudios de laboratorio
+create table if not exists study_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  date date not null,
+  values jsonb not null default '{}',
+  created_at timestamptz default now()
+);
+
+-- Preferencia de dieta elegida
+create table if not exists diet_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null unique,
+  selected_diet text,
+  selected_meal text,
+  updated_at timestamptz default now()
+);
+
+-- Composición corporal
+create table if not exists body_comp_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  date date not null,
+  peso numeric,
+  grasa numeric,
+  musculo numeric,
+  cintura numeric,
+  cadera numeric,
+  brazo numeric,
+  pierna numeric,
+  created_at timestamptz default now()
+);
+
 -- =========================================================
 -- Seguridad: cada usuario solo ve y edita sus propios datos
 -- =========================================================
@@ -111,6 +144,9 @@ alter table steps enable row level security;
 alter table meals enable row level security;
 alter table training_profile enable row level security;
 alter table training_logs enable row level security;
+alter table study_entries enable row level security;
+alter table diet_preferences enable row level security;
+alter table body_comp_entries enable row level security;
 
 create policy "profiles: propio" on profiles
   for all using (auth.uid() = id) with check (auth.uid() = id);
@@ -134,4 +170,13 @@ create policy "training_profile: propio" on training_profile
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "training_logs: propio" on training_logs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "study_entries: propio" on study_entries
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "diet_preferences: propio" on diet_preferences
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "body_comp_entries: propio" on body_comp_entries
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

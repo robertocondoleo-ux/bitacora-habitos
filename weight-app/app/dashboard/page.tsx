@@ -12,7 +12,10 @@ import {
   ListChecks,
   UtensilsCrossed,
   Dumbbell,
-  Menu,
+  FileText,
+  Salad,
+  Activity,
+  MoreHorizontal,
   X,
 } from "lucide-react";
 import HomeSummary from "@/components/HomeSummary";
@@ -27,18 +30,29 @@ import MonthlyHabitsSummary from "@/components/MonthlyHabitsSummary";
 import MealsSection from "@/components/MealsSection";
 import TrainingPlanCard from "@/components/TrainingPlanCard";
 import TrainingLogSection from "@/components/TrainingLogSection";
+import StudiesSection from "@/components/StudiesSection";
+import DietSection from "@/components/DietSection";
+import BodyCompSection from "@/components/BodyCompSection";
+import WhatsNewModal from "@/components/WhatsNewModal";
 
-// Para sumar un módulo nuevo (Estudios, Dieta, Composición corporal): agregar
-// un id acá y una entrada en TABS más abajo. El menú se arma solo.
-type Tab = "inicio" | "peso" | "pasos" | "habitos" | "comidas" | "entrenamiento";
+type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
+type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "composicion";
+type Tab = MainTab | ExtraTab;
 
-const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
+const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home }[] = [
   { id: "inicio", label: "Inicio", icon: Home },
   { id: "peso", label: "Peso", icon: Scale },
   { id: "pasos", label: "Pasos", icon: Footprints },
   { id: "habitos", label: "Hábitos", icon: ListChecks },
   { id: "comidas", label: "Comidas", icon: UtensilsCrossed },
+];
+
+// Para sumar un módulo nuevo al selector de "Más": agregar una entrada acá.
+const EXTRA_TABS: { id: ExtraTab; label: string; icon: typeof Home }[] = [
   { id: "entrenamiento", label: "Entrenamiento", icon: Dumbbell },
+  { id: "estudios", label: "Estudios", icon: FileText },
+  { id: "dieta", label: "Dieta", icon: Salad },
+  { id: "composicion", label: "Composición corporal", icon: Activity },
 ];
 
 export default function Dashboard() {
@@ -47,7 +61,7 @@ export default function Dashboard() {
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("inicio");
   const [weightRefresh, setWeightRefresh] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -72,9 +86,9 @@ export default function Dashboard() {
     router.replace("/login");
   }
 
-  function selectTab(id: Tab) {
+  function selectExtraTab(id: ExtraTab) {
     setTab(id);
-    setMenuOpen(false);
+    setMoreOpen(false);
   }
 
   if (checking || !user) {
@@ -85,23 +99,20 @@ export default function Dashboard() {
     );
   }
 
-  const activeLabel = TABS.find((t) => t.id === tab)?.label ?? "";
+  const isExtraActive = EXTRA_TABS.some((t) => t.id === tab);
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="border-b border-line bg-paper/85 backdrop-blur sticky top-0 z-20">
+      <WhatsNewModal />
+      <header className="border-b border-line bg-paper/85 backdrop-blur sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMenuOpen(true)}
-              aria-label="Abrir menú"
-              className="w-9 h-9 rounded-xl bg-ink text-paper flex items-center justify-center shrink-0"
-            >
-              <Menu size={18} />
-            </button>
+            <div className="w-9 h-9 rounded-xl bg-ink text-paper flex items-center justify-center font-display text-lg shrink-0">
+              B
+            </div>
             <div>
               <h1 className="font-display text-xl text-ink leading-none">
-                {activeLabel}
+                Bitácora
               </h1>
               <p className="text-xs text-soft mt-1">{user.email}</p>
             </div>
@@ -115,55 +126,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Overlay + panel del menú hamburguesa */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-30">
-          <div
-            className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="absolute top-0 left-0 bottom-0 w-72 max-w-[80vw] bg-panel border-r border-line shadow-xl p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-ink text-paper flex items-center justify-center font-display text-sm">
-                  B
-                </div>
-                <span className="font-display text-lg text-ink">Bitácora</span>
-              </div>
-              <button
-                onClick={() => setMenuOpen(false)}
-                aria-label="Cerrar menú"
-                className="text-soft hover:text-clay"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <nav className="flex flex-col gap-1">
-              {TABS.map((t) => {
-                const active = tab === t.id;
-                const Icon = t.icon;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => selectTab(t.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
-                      active
-                        ? "bg-clay/10 text-clay"
-                        : "text-ink hover:bg-line/40"
-                    }`}
-                  >
-                    <Icon size={17} strokeWidth={2} />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-      )}
-
-      <main className="max-w-lg mx-auto px-4 pt-5 pb-10 space-y-6">
+      <main className="max-w-lg mx-auto px-4 pt-5 pb-24 space-y-6">
         {tab === "inicio" && <HomeSummary userId={user.id} />}
 
         {tab === "peso" && (
@@ -203,7 +166,78 @@ export default function Dashboard() {
             <TrainingLogSection userId={user.id} />
           </>
         )}
+
+        {tab === "estudios" && <StudiesSection userId={user.id} />}
+
+        {tab === "dieta" && <DietSection userId={user.id} />}
+
+        {tab === "composicion" && <BodyCompSection userId={user.id} />}
       </main>
+
+      {/* Selector de módulos extra, se despliega arriba del botón "Más" */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-20" onClick={() => setMoreOpen(false)}>
+          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" />
+          <div
+            className="absolute bottom-[68px] left-0 right-0 max-w-lg mx-auto px-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-panel border border-line rounded-2xl shadow-xl p-2 mb-2">
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <p className="text-xs uppercase tracking-wide text-soft">Más módulos</p>
+                <button onClick={() => setMoreOpen(false)} className="text-soft hover:text-clay">
+                  <X size={16} />
+                </button>
+              </div>
+              {EXTRA_TABS.map((t) => {
+                const Icon = t.icon;
+                const active = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => selectExtraTab(t.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                      active ? "bg-clay/10 text-clay" : "text-ink hover:bg-line/40"
+                    }`}
+                  >
+                    <Icon size={17} strokeWidth={2} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-panel/95 backdrop-blur border-t border-line z-10">
+        <div className="max-w-lg mx-auto grid grid-cols-6">
+          {MAIN_TABS.map((t) => {
+            const active = tab === t.id;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setTab(t.id);
+                  setMoreOpen(false);
+                }}
+                className="flex flex-col items-center gap-1 py-2.5"
+              >
+                <Icon size={19} strokeWidth={2} className={active ? "text-clay" : "text-soft"} />
+                <span className={`text-[10px] ${active ? "text-clay" : "text-soft"}`}>{t.label}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className="flex flex-col items-center gap-1 py-2.5"
+          >
+            <MoreHorizontal size={19} strokeWidth={2} className={isExtraActive || moreOpen ? "text-clay" : "text-soft"} />
+            <span className={`text-[10px] ${isExtraActive || moreOpen ? "text-clay" : "text-soft"}`}>Más</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
