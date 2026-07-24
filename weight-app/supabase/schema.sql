@@ -81,6 +81,25 @@ create table if not exists meals (
   created_at timestamptz default now()
 );
 
+-- Perfil de entrenamiento: objetivos elegidos y días disponibles por semana
+create table if not exists training_profile (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null unique,
+  goals text[] not null default '{}',
+  days_per_week integer not null default 3,
+  updated_at timestamptz default now()
+);
+
+-- Ejercicios registrados por día
+create table if not exists training_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  date date not null default current_date,
+  exercise_name text not null,
+  sets jsonb not null default '[]',
+  created_at timestamptz default now()
+);
+
 -- =========================================================
 -- Seguridad: cada usuario solo ve y edita sus propios datos
 -- =========================================================
@@ -90,6 +109,8 @@ alter table habits enable row level security;
 alter table habit_logs enable row level security;
 alter table steps enable row level security;
 alter table meals enable row level security;
+alter table training_profile enable row level security;
+alter table training_logs enable row level security;
 
 create policy "profiles: propio" on profiles
   for all using (auth.uid() = id) with check (auth.uid() = id);
@@ -107,4 +128,10 @@ create policy "steps: propio" on steps
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "meals: propio" on meals
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "training_profile: propio" on training_profile
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "training_logs: propio" on training_logs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
