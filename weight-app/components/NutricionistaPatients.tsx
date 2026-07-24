@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { SHARABLE_SECTIONS, SectionId } from "@/lib/specialistData";
 import { Users, ChefHat, Trash2 } from "lucide-react";
 
-type Patient = { linkId: string; id: string; email: string; display_name: string | null; shared: SectionId[] };
+type Patient = { linkId: string; id: string; email: string; display_name: string | null; shared: SectionId[]; status: "pending" | "active" };
 type Recipe = { id: string; title: string; description: string | null; created_at: string };
 
 export default function NutricionistaPatients({ userId }: { userId: string }) {
@@ -26,7 +26,7 @@ export default function NutricionistaPatients({ userId }: { userId: string }) {
   const loadPatients = useCallback(async () => {
     const { data: linkRows } = await supabase
       .from("specialist_links")
-      .select("id, patient_id, shared_sections")
+      .select("id, patient_id, shared_sections, status")
       .eq("specialist_id", userId)
       .eq("specialty", "nutricionista");
 
@@ -48,10 +48,16 @@ export default function NutricionistaPatients({ userId }: { userId: string }) {
         email: byId[r.patient_id]?.email,
         display_name: byId[r.patient_id]?.display_name,
         shared: r.shared_sections || [],
+        status: r.status,
       }))
     );
     setLoading(false);
   }, [userId]);
+
+  async function acceptPatient(linkId: string) {
+    await supabase.from("specialist_links").update({ status: "active" }).eq("id", linkId);
+    loadPatients();
+  }
 
   useEffect(() => {
     loadPatients();
@@ -150,18 +156,50 @@ export default function NutricionistaPatients({ userId }: { userId: string }) {
             especialista", va a aparecer acá.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {patients.map((p) => (
-              <button
-                key={p.linkId}
-                onClick={() => selectPatient(p)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                  selected?.id === p.id ? "border-clay bg-clay/10 text-clay" : "border-line text-soft hover:border-soft"
-                }`}
-              >
-                {p.display_name || p.email}
-              </button>
-            ))}
+          <div className="space-y-4">
+            {patients.some((p) => p.status === "pending") && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-amber mb-2">Solicitudes pendientes</p>
+                <div className="space-y-2">
+                  {patients
+                    .filter((p) => p.status === "pending")
+                    .map((p) => (
+                      <div
+                        key={p.linkId}
+                        className="flex items-center justify-between border border-amber/40 bg-amber/10 rounded-xl px-3 py-2.5"
+                      >
+                        <p className="text-sm text-ink">{p.display_name || p.email}</p>
+                        <button onClick={() => acceptPatient(p.linkId)} className="btn-primary px-3 py-1.5 text-xs">
+                          Aceptar
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {patients.some((p) => p.status === "active") && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-soft mb-2">Pacientes</p>
+                <div className="flex flex-wrap gap-2">
+                  {patients
+                    .filter((p) => p.status === "active")
+                    .map((p) => (
+                      <button
+                        key={p.linkId}
+                        onClick={() => selectPatient(p)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                          selected?.id === p.id
+                            ? "border-clay bg-clay/10 text-clay"
+                            : "border-line text-soft hover:border-soft"
+                        }`}
+                      >
+                        {p.display_name || p.email}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

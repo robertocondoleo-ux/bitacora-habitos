@@ -198,7 +198,7 @@ create table if not exists specialist_links (
   specialist_id uuid references auth.users(id) on delete cascade not null,
   specialty text not null check (specialty in ('nutricionista','entrenador')),
   shared_sections text[] not null default '{}',
-  status text not null default 'active',
+  status text not null default 'pending',
   created_at timestamptz default now(),
   unique (patient_id, specialist_id)
 );
@@ -234,9 +234,12 @@ alter table assigned_training enable row level security;
 -- El paciente controla su propio vínculo (crearlo, editar qué comparte, borrarlo).
 create policy "specialist_links: paciente gestiona" on specialist_links
   for all using (auth.uid() = patient_id) with check (auth.uid() = patient_id);
--- El especialista puede ver (no editar) los vínculos donde es el especialista.
+-- El especialista puede ver (no editar salvo el estado) los vínculos donde es el especialista.
 create policy "specialist_links: especialista ve" on specialist_links
   for select using (auth.uid() = specialist_id);
+-- Aceptar/rechazar una solicitud es la única edición permitida del lado del especialista.
+create policy "specialist_links: especialista actualiza estado" on specialist_links
+  for update using (auth.uid() = specialist_id) with check (auth.uid() = specialist_id);
 
 create policy "recipes: nutricionista gestiona las suyas" on recipes
   for all using (auth.uid() = author_id) with check (auth.uid() = author_id);
@@ -322,8 +325,8 @@ create policy "body_comp_entries: especialista ve si fue compartido" on body_com
       and sl.status = 'active' and 'composicion' = any(sl.shared_sections)
   ));
 
--- 6) Los especialistas necesitan poder listar perfiles por rol (para el
---    buscador de "Agregar especialista"). Se expone lo mínimo: id, email,
---    display_name y role — nada sensible.
-create policy "profiles: cualquiera logueado puede buscar especialistas" on profiles
-  for select using (auth.role() = 'authenticated');
+-- 6) Los usuarios necesitan poder listar perfiles por rol (para el buscador
+--    de "Agregar especialista"), pero SOLO de cuentas nutricionista/entrenador
+--    — nunca de otros usuarios normales.
+create policy "profiles: buscar especialistas" on profiles
+  for select using (role in ('nutricionista', 'entrenador'));

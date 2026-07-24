@@ -14,6 +14,7 @@ type Link = {
   specialist_id: string;
   specialty: Specialty;
   shared_sections: SectionId[];
+  status: "pending" | "active";
   specialistEmail?: string;
   specialistName?: string | null;
 };
@@ -29,7 +30,7 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
   const loadLinks = useCallback(async () => {
     const { data } = await supabase
       .from("specialist_links")
-      .select("id, specialist_id, specialty, shared_sections")
+      .select("id, specialist_id, specialty, shared_sections, status")
       .eq("patient_id", userId);
 
     const rows = (data as any[]) || [];
@@ -76,7 +77,7 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
     if (!specialty) return;
     setLinking(specialistId);
     await supabase.from("specialist_links").upsert(
-      { patient_id: userId, specialist_id: specialistId, specialty, shared_sections: [], status: "active" },
+      { patient_id: userId, specialist_id: specialistId, specialty, shared_sections: [], status: "pending" },
       { onConflict: "patient_id,specialist_id" }
     );
     setLinking(null);
@@ -136,7 +137,7 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
             ) : (
               <div className="space-y-2">
                 {specialists.map((s) => {
-                  const already = links.some((l) => l.specialist_id === s.id);
+                  const already = links.find((l) => l.specialist_id === s.id);
                   return (
                     <div
                       key={s.id}
@@ -147,8 +148,12 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
                         <p className="text-[11px] text-soft">{s.email}</p>
                       </div>
                       {already ? (
-                        <span className="text-xs text-moss flex items-center gap-1">
-                          <Check size={13} /> vinculado
+                        <span
+                          className={`text-xs flex items-center gap-1 ${
+                            already.status === "active" ? "text-moss" : "text-amber"
+                          }`}
+                        >
+                          <Check size={13} /> {already.status === "active" ? "vinculado" : "pendiente de aceptar"}
                         </span>
                       ) : (
                         <button
@@ -189,7 +194,12 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
                     <p className="text-sm font-medium text-ink">
                       {link.specialistName || link.specialistEmail}
                     </p>
-                    <p className="text-[11px] text-soft capitalize">{link.specialty}</p>
+                    <p className="text-[11px] text-soft capitalize flex items-center gap-1.5">
+                      {link.specialty}
+                      <span className={link.status === "active" ? "text-moss" : "text-amber"}>
+                        · {link.status === "active" ? "vinculado" : "esperando que acepte"}
+                      </span>
+                    </p>
                   </div>
                   <button onClick={() => removeLink(link.id)} className="text-xs text-clay">
                     Quitar
@@ -221,9 +231,9 @@ export default function AddSpecialistSection({ userId }: { userId: string }) {
         <div className="flex gap-2.5">
           <Construction size={16} className="text-amber shrink-0 mt-0.5" />
           <p className="text-xs text-ink leading-relaxed">
-            <strong>Próximamente:</strong> hoy al vincularte el acceso queda activo directo, sin que el especialista
-            tenga que confirmarlo del otro lado, y todavía no le llega ninguna notificación. Más adelante vamos a
-            sumar la aprobación mutua y el aviso automático.
+            Cuando elegís un especialista, el vínculo queda <strong>pendiente</strong> hasta que él lo acepte de su
+            lado. Recién ahí empieza a ver las secciones que le compartas. Por ahora no le llega ninguna notificación
+            automática — tenés que avisarle vos que le mandaste la solicitud.
           </p>
         </div>
       </div>
