@@ -41,6 +41,14 @@ const POOLS: Record<GoalId, Focus[]> = {
   ],
 };
 
+export const ALL_EXERCISES: string[] = Array.from(
+  new Set(
+    Object.values(POOLS)
+      .flat()
+      .flatMap((f) => f.exercises)
+  )
+).sort();
+
 export const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 const PATTERNS: Record<number, number[]> = {

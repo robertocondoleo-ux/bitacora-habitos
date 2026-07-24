@@ -3,9 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { DIETS, MEALS, DISHES, DietId, MealId } from "@/lib/dietData";
-import { Salad, Info } from "lucide-react";
+import { Salad, Info, ChefHat } from "lucide-react";
+
+type Recipe = { id: string; title: string; description: string | null; created_at: string };
 
 export default function DietSection({ userId }: { userId: string }) {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [selected, setSelected] = useState<DietId | null>(null);
   const [meal, setMeal] = useState<MealId | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +23,12 @@ export default function DietSection({ userId }: { userId: string }) {
       setSelected((data.selected_diet as DietId) || null);
       setMeal((data.selected_meal as MealId) || null);
     }
+    const { data: rec } = await supabase
+      .from("recipes")
+      .select("id, title, description, created_at")
+      .eq("patient_id", userId)
+      .order("created_at", { ascending: false });
+    setRecipes((rec as Recipe[]) || []);
     setLoading(false);
   }, [userId]);
 
@@ -56,6 +65,23 @@ export default function DietSection({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
+      {recipes.length > 0 && (
+        <div className="card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <ChefHat size={15} className="text-clay" strokeWidth={2} />
+            <p className="text-xs uppercase tracking-wide text-soft">Recomendado por tu nutricionista</p>
+          </div>
+          <div className="space-y-3">
+            {recipes.map((r) => (
+              <div key={r.id} className="border border-line rounded-xl px-3.5 py-3 bg-paper">
+                <p className="text-sm font-medium text-ink">{r.title}</p>
+                {r.description && <p className="text-xs text-soft mt-1 whitespace-pre-wrap">{r.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="card p-5 border-amber/40 bg-amber/10">
         <div className="flex gap-2.5">
           <Info size={16} className="text-amber shrink-0 mt-0.5" />

@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import {
   LogOut,
+  Settings,
   Home,
   Scale,
   Footprints,
@@ -15,6 +16,8 @@ import {
   FileText,
   Salad,
   Activity,
+  UserPlus,
+  Users,
   MoreHorizontal,
   X,
 } from "lucide-react";
@@ -30,13 +33,19 @@ import MonthlyHabitsSummary from "@/components/MonthlyHabitsSummary";
 import MealsSection from "@/components/MealsSection";
 import TrainingPlanCard from "@/components/TrainingPlanCard";
 import TrainingLogSection from "@/components/TrainingLogSection";
+import AssignedTrainingCard from "@/components/AssignedTrainingCard";
 import StudiesSection from "@/components/StudiesSection";
 import DietSection from "@/components/DietSection";
 import BodyCompSection from "@/components/BodyCompSection";
+import AddSpecialistSection from "@/components/AddSpecialistSection";
+import NutricionistaPatients from "@/components/NutricionistaPatients";
+import EntrenadorPatients from "@/components/EntrenadorPatients";
 import WhatsNewModal from "@/components/WhatsNewModal";
+import AccountSettingsModal from "@/components/AccountSettingsModal";
+import type { Role } from "@/lib/specialistData";
 
 type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
-type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "composicion";
+type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "composicion" | "especialista" | "pacientes";
 type Tab = MainTab | ExtraTab;
 
 const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home }[] = [
@@ -47,37 +56,50 @@ const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home }[] = [
   { id: "comidas", label: "Comidas", icon: UtensilsCrossed },
 ];
 
-// Para sumar un módulo nuevo al selector de "Más": agregar una entrada acá.
-const EXTRA_TABS: { id: ExtraTab; label: string; icon: typeof Home }[] = [
+// Módulos base que ve cualquier cuenta desde el botón "Más".
+const BASE_EXTRA_TABS: { id: ExtraTab; label: string; icon: typeof Home }[] = [
   { id: "entrenamiento", label: "Entrenamiento", icon: Dumbbell },
   { id: "estudios", label: "Estudios", icon: FileText },
   { id: "dieta", label: "Dieta", icon: Salad },
   { id: "composicion", label: "Composición corporal", icon: Activity },
 ];
 
+function extraTabsForRole(role: Role): { id: ExtraTab; label: string; icon: typeof Home }[] {
+  if (role === "usuario") {
+    return [...BASE_EXTRA_TABS, { id: "especialista", label: "Agregar especialista", icon: UserPlus }];
+  }
+  return [...BASE_EXTRA_TABS, { id: "pacientes", label: "Ver pacientes", icon: Users }];
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<Role>("usuario");
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("inicio");
   const [weightRefresh, setWeightRefresh] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
         router.replace("/login");
-      } else {
-        setUser(data.session.user);
-        setChecking(false);
+        return;
       }
+      setUser(data.session.user);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.session.user.id)
+        .maybeSingle();
+      setRole((profile?.role as Role) || "usuario");
+      setChecking(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session) router.replace("/login");
-      }
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) router.replace("/login");
+    });
     return () => listener.subscription.unsubscribe();
   }, [router]);
 
@@ -99,11 +121,24 @@ export default function Dashboard() {
     );
   }
 
-  const isExtraActive = EXTRA_TABS.some((t) => t.id === tab);
+  const extraTabs = extraTabsForRole(role);
+  const isExtraActive = extraTabs.some((t) => t.id === tab);
 
   return (
     <div className="min-h-screen bg-paper">
       <WhatsNewModal />
+      {settingsOpen && (
+        <AccountSettingsModal
+          userId={user.id}
+          currentRole={role}
+          onClose={() => setSettingsOpen(false)}
+          onRoleChange={(r) => {
+            setRole(r);
+            setTab("inicio");
+          }}
+        />
+      )}
+
       <header className="border-b border-line bg-paper/85 backdrop-blur sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -111,18 +146,23 @@ export default function Dashboard() {
               B
             </div>
             <div>
-              <h1 className="font-display text-xl text-ink leading-none">
-                Bitácora
-              </h1>
-              <p className="text-xs text-soft mt-1">{user.email}</p>
+              <h1 className="font-display text-xl text-ink leading-none">Bitácora</h1>
+              <p className="text-xs text-soft mt-1 capitalize">
+                {user.email} {role !== "usuario" && `· ${role}`}
+              </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm text-soft hover:text-clay transition"
-          >
-            <LogOut size={14} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSettingsOpen(true)} className="text-soft hover:text-clay transition">
+              <Settings size={16} />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-sm text-soft hover:text-clay transition"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -133,14 +173,8 @@ export default function Dashboard() {
           <>
             <GoalCard userId={user.id} />
             <WeightSection key={`daily-${weightRefresh}`} userId={user.id} />
-            <MonthlyWeightEntry
-              userId={user.id}
-              onSaved={() => setWeightRefresh((k) => k + 1)}
-            />
-            <MonthlyWeightSummary
-              key={`summary-${weightRefresh}`}
-              userId={user.id}
-            />
+            <MonthlyWeightEntry userId={user.id} onSaved={() => setWeightRefresh((k) => k + 1)} />
+            <MonthlyWeightSummary key={`summary-${weightRefresh}`} userId={user.id} />
           </>
         )}
 
@@ -162,6 +196,7 @@ export default function Dashboard() {
 
         {tab === "entrenamiento" && (
           <>
+            <AssignedTrainingCard userId={user.id} />
             <TrainingPlanCard userId={user.id} />
             <TrainingLogSection userId={user.id} />
           </>
@@ -172,9 +207,13 @@ export default function Dashboard() {
         {tab === "dieta" && <DietSection userId={user.id} />}
 
         {tab === "composicion" && <BodyCompSection userId={user.id} />}
+
+        {tab === "especialista" && <AddSpecialistSection userId={user.id} />}
+
+        {tab === "pacientes" && role === "nutricionista" && <NutricionistaPatients userId={user.id} />}
+        {tab === "pacientes" && role === "entrenador" && <EntrenadorPatients userId={user.id} />}
       </main>
 
-      {/* Selector de módulos extra, se despliega arriba del botón "Más" */}
       {moreOpen && (
         <div className="fixed inset-0 z-20" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" />
@@ -189,7 +228,7 @@ export default function Dashboard() {
                   <X size={16} />
                 </button>
               </div>
-              {EXTRA_TABS.map((t) => {
+              {extraTabs.map((t) => {
                 const Icon = t.icon;
                 const active = tab === t.id;
                 return (
@@ -229,10 +268,7 @@ export default function Dashboard() {
               </button>
             );
           })}
-          <button
-            onClick={() => setMoreOpen((v) => !v)}
-            className="flex flex-col items-center gap-1 py-2.5"
-          >
+          <button onClick={() => setMoreOpen((v) => !v)} className="flex flex-col items-center gap-1 py-2.5">
             <MoreHorizontal size={19} strokeWidth={2} className={isExtraActive || moreOpen ? "text-clay" : "text-soft"} />
             <span className={`text-[10px] ${isExtraActive || moreOpen ? "text-clay" : "text-soft"}`}>Más</span>
           </button>
