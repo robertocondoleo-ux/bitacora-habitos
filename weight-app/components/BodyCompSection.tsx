@@ -126,14 +126,14 @@ export default function BodyCompSection({ userId }: { userId: string }) {
           <div style={{ width: "100%", height: 240 }}>
             <ResponsiveContainer>
               <LineChart data={chartData}>
-                <CartesianGrid stroke="#E4DFD3" strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#8A8577" }} />
-                <YAxis tick={{ fontSize: 10, fill: "#8A8577" }} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E4DFD3" }} />
+                <CartesianGrid stroke="#37432A" strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#9AA38C" }} />
+                <YAxis tick={{ fontSize: 10, fill: "#9AA38C" }} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #37432A", backgroundColor: "#1E2617", color: "#F3F1E7" }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="Peso" stroke="#1C2321" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="Grasa" stroke="#B5602F" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="Músculo" stroke="#4B5E4A" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="Peso" stroke="#F3F1E7" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="Grasa" stroke="#E8623D" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="Músculo" stroke="#8FB77E" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           </div>

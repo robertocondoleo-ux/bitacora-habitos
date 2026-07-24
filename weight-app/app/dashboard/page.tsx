@@ -216,9 +216,9 @@ export default function Dashboard() {
 
       {moreOpen && (
         <div className="fixed inset-0 z-20" onClick={() => setMoreOpen(false)}>
-          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
-            className="absolute bottom-[68px] left-0 right-0 max-w-lg mx-auto px-4"
+            className="absolute bottom-[84px] left-0 right-0 max-w-lg mx-auto px-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-panel border border-line rounded-2xl shadow-xl p-2 mb-2">
@@ -249,8 +249,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-panel/95 backdrop-blur border-t border-line z-10">
-        <div className="max-w-lg mx-auto grid grid-cols-6">
+      <nav className="fixed bottom-4 left-4 right-4 z-10">
+        <div className="max-w-lg mx-auto bg-panel/95 backdrop-blur border border-line rounded-full shadow-lg px-1.5 py-1.5 flex items-center justify-between">
           {MAIN_TABS.map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;
@@ -261,16 +261,23 @@ export default function Dashboard() {
                   setTab(t.id);
                   setMoreOpen(false);
                 }}
-                className="flex flex-col items-center gap-1 py-2.5"
+                className={`flex items-center gap-1.5 py-2 rounded-full press transition-all ${
+                  active ? "bg-clay px-3.5" : "px-2.5"
+                }`}
               >
-                <Icon size={19} strokeWidth={2} className={active ? "text-clay" : "text-soft"} />
-                <span className={`text-[10px] ${active ? "text-clay" : "text-soft"}`}>{t.label}</span>
+                <Icon size={16} strokeWidth={2.2} className={active ? "text-paper" : "text-soft"} />
+                {active && <span className="text-[11px] font-medium text-paper whitespace-nowrap">{t.label}</span>}
               </button>
             );
           })}
-          <button onClick={() => setMoreOpen((v) => !v)} className="flex flex-col items-center gap-1 py-2.5">
-            <MoreHorizontal size={19} strokeWidth={2} className={isExtraActive || moreOpen ? "text-clay" : "text-soft"} />
-            <span className={`text-[10px] ${isExtraActive || moreOpen ? "text-clay" : "text-soft"}`}>Más</span>
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className={`flex items-center gap-1.5 py-2 rounded-full press transition-all ${
+              isExtraActive || moreOpen ? "bg-clay px-3.5" : "px-2.5"
+            }`}
+          >
+            <MoreHorizontal size={16} strokeWidth={2.2} className={isExtraActive || moreOpen ? "text-paper" : "text-soft"} />
+            {(isExtraActive || moreOpen) && <span className="text-[11px] font-medium text-paper whitespace-nowrap">Más</span>}
           </button>
         </div>
       </nav>

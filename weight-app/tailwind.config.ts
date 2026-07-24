@@ -8,14 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#F6F3EC",
-        ink: "#1C2321",
-        panel: "#FFFFFF",
-        line: "#E4DFD3",
-        moss: "#4B5E4A",
-        clay: "#B5602F",
+        paper: "#141A0F",
+        ink: "#F3F1E7",
+        panel: "#1E2617",
+        panel2: "#26301C",
+        line: "#37432A",
+        moss: "#8FB77E",
+        clay: "#E8623D",
         amber: "#D9A441",
-        soft: "#8A8577",
+        soft: "#9AA38C",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "serif"],

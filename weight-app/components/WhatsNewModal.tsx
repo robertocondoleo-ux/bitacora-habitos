@@ -54,7 +54,7 @@ export default function WhatsNewModal() {
 
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={dismiss} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismiss} />
       <div className="relative bg-panel border border-line rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto p-5">
         <div className="flex items-start justify-between mb-1">
           <div className="flex items-center gap-2">

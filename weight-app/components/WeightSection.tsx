@@ -97,17 +97,17 @@ export default function WeightSection({ userId }: { userId: string }) {
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid stroke="#E4DFD3" strokeDasharray="3 3" />
+              <CartesianGrid stroke="#37432A" strokeDasharray="3 3" />
               <XAxis
                 dataKey="label"
                 fontSize={11}
-                stroke="#8A8577"
+                stroke="#9AA38C"
                 tickLine={false}
               />
               <YAxis
                 domain={["dataMin - 1", "dataMax + 1"]}
                 fontSize={11}
-                stroke="#8A8577"
+                stroke="#9AA38C"
                 tickLine={false}
                 width={36}
               />
@@ -115,15 +115,15 @@ export default function WeightSection({ userId }: { userId: string }) {
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 8,
-                  borderColor: "#E4DFD3",
+                  borderColor: "#37432A", backgroundColor: "#1E2617", color: "#F3F1E7",
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="weight"
-                stroke="#B5602F"
+                stroke="#E8623D"
                 strokeWidth={2}
-                dot={{ r: 3, fill: "#B5602F" }}
+                dot={{ r: 3, fill: "#E8623D" }}
               />
             </LineChart>
           </ResponsiveContainer>

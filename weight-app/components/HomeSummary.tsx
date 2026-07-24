@@ -66,7 +66,7 @@ export default function HomeSummary({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl p-5 flex items-center gap-4 bg-ink">
+      <div className="rounded-2xl p-5 flex items-center gap-4 bg-panel2 border border-clay/20 shadow-lg">
         <svg
           width="84"
           height="84"
@@ -79,7 +79,7 @@ export default function HomeSummary({ userId }: { userId: string }) {
             cy="42"
             r="36"
             fill="none"
-            stroke="rgba(246,243,236,0.15)"
+            stroke="rgba(243,241,231,0.12)"
             strokeWidth="8"
           />
           {ring.percent !== null && (
@@ -88,7 +88,7 @@ export default function HomeSummary({ userId }: { userId: string }) {
               cy="42"
               r="36"
               fill="none"
-              stroke="#D9A441"
+              stroke="#E8623D"
               strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={226}
@@ -100,18 +100,18 @@ export default function HomeSummary({ userId }: { userId: string }) {
             x="42"
             y="38"
             textAnchor="middle"
-            fill="#F6F3EC"
+            fill="#F3F1E7"
             fontSize="17"
           >
             {current ? current.toFixed(1) : "—"}
           </text>
-          <text x="42" y="53" textAnchor="middle" fill="#8A8577" fontSize="9">
+          <text x="42" y="53" textAnchor="middle" fill="#9AA38C" fontSize="9">
             kg
           </text>
         </svg>
         <div>
           <p className="text-xs text-soft m-0">Camino al objetivo</p>
-          <p className="font-display text-2xl text-paper mt-0.5 mb-1.5">
+          <p className="font-display text-2xl text-ink mt-0.5 mb-1.5">
             {ring.percent !== null ? `${ring.percent}%` : "—"}
           </p>
           <p className="text-xs text-amber m-0">{ring.message}</p>
