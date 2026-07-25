@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
+import { themeInitScript } from "@/lib/theme";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -47,6 +48,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         className={`${fraunces.variable} ${inter.variable} ${mono.variable} font-body`}
       >

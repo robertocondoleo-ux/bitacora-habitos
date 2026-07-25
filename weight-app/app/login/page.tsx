@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { MailCheck } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -103,6 +104,7 @@ export default function LoginPage() {
   if (signupSent) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
         <div className="w-full max-w-sm text-center">
           <div className="w-16 h-16 rounded-2xl bg-clay/10 text-clay flex items-center justify-center mx-auto mb-5">
             <MailCheck size={28} strokeWidth={1.8} />
@@ -133,6 +135,7 @@ export default function LoginPage() {
   if (mode === "recover") {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <h1 className="font-display text-3xl text-ink">Bitácora</h1>
@@ -194,6 +197,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="font-display text-3xl text-ink">Bitácora</h1>

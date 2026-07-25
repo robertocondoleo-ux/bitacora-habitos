@@ -102,31 +102,31 @@ export default function StepsSection({ userId }: { userId: string }) {
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-              <CartesianGrid stroke="#37432A" strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
               <XAxis
                 dataKey="label"
                 fontSize={11}
-                stroke="#9AA38C"
+                stroke="var(--soft)"
                 tickLine={false}
               />
-              <YAxis fontSize={11} stroke="#9AA38C" tickLine={false} width={40} />
+              <YAxis fontSize={11} stroke="var(--soft)" tickLine={false} width={40} />
               <Tooltip
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 8,
-                  borderColor: "#37432A", backgroundColor: "#1E2617", color: "#F3F1E7",
+                  borderColor: "var(--line)", backgroundColor: "var(--panel)", color: "var(--ink)",
                 }}
               />
               {goal !== null && (
                 <ReferenceLine
                   y={goal}
-                  stroke="#F3F1E7"
+                  stroke="var(--ink)"
                   strokeDasharray="5 4"
                   strokeWidth={1.5}
                   label={{
                     value: `Objetivo: ${goal.toLocaleString("es-AR")}`,
                     fontSize: 10,
-                    fill: "#F3F1E7",
+                    fill: "var(--ink)",
                     position: "insideTopRight",
                   }}
                 />
@@ -137,8 +137,8 @@ export default function StepsSection({ userId }: { userId: string }) {
                     key={i}
                     fill={
                       goal !== null && entry.steps >= goal
-                        ? "#8FB77E"
-                        : "#D9A441"
+                        ? "var(--moss)"
+                        : "var(--amber)"
                     }
                   />
                 ))}

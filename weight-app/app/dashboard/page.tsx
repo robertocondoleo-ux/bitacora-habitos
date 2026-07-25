@@ -42,6 +42,7 @@ import NutricionistaPatients from "@/components/NutricionistaPatients";
 import EntrenadorPatients from "@/components/EntrenadorPatients";
 import WhatsNewModal from "@/components/WhatsNewModal";
 import AccountSettingsModal from "@/components/AccountSettingsModal";
+import ThemeToggle from "@/components/ThemeToggle";
 import type { Role } from "@/lib/specialistData";
 
 type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
@@ -153,6 +154,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <button onClick={() => setSettingsOpen(true)} className="text-soft hover:text-clay transition">
               <Settings size={16} />
             </button>

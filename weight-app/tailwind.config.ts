@@ -8,15 +8,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#141A0F",
-        ink: "#F3F1E7",
-        panel: "#1E2617",
-        panel2: "#26301C",
-        line: "#37432A",
-        moss: "#8FB77E",
-        clay: "#E8623D",
-        amber: "#D9A441",
-        soft: "#9AA38C",
+        paper: "var(--paper)",
+        ink: "var(--ink)",
+        panel: "var(--panel)",
+        panel2: "var(--panel2)",
+        line: "var(--line)",
+        moss: "var(--moss)",
+        clay: "var(--clay)",
+        amber: "var(--amber)",
+        soft: "var(--soft)",
+        hero: "var(--hero-bg)",
+        herotext: "var(--hero-text)",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "serif"],
