@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO, isoDaysAgo, formatShort } from "@/lib/dates";
-import { UtensilsCrossed, Pencil, X, Trash2 } from "lucide-react";
+import { UtensilsCrossed, Pencil, X, Trash2, Plus, Coffee, Soup, Moon, Apple, Cookie } from "lucide-react";
 
 type Meal = {
   id: string;
@@ -13,6 +13,36 @@ type Meal = {
 };
 
 const TIPOS = ["Desayuno", "Almuerzo", "Merienda", "Cena", "Snack"];
+const TIPO_ICON: Record<string, any> = {
+  Desayuno: Coffee,
+  Almuerzo: Soup,
+  Merienda: Cookie,
+  Cena: Moon,
+  Snack: Apple,
+};
+
+const DIAS_CORTOS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+const MESES_LARGOS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+const DIAS_LARGOS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+function formatLong(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  return `${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES_LARGOS[d.getMonth()]}`;
+}
+
+function lastNDays(n: number) {
+  const out: string[] = [];
+  const today = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
 
 export default function MealsSection({ userId }: { userId: string }) {
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -21,6 +51,11 @@ export default function MealsSection({ userId }: { userId: string }) {
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const formRef = useRef<HTMLFormElement>(null);
+  const descRef = useRef<HTMLInputElement>(null);
+
+  const [mode, setMode] = useState<"lista" | "dia">("lista");
+  const [selectedDate, setSelectedDate] = useState(todayISO());
 
   // Popup de detalle / edición
   const [modalMeal, setModalMeal] = useState<Meal | null>(null);
@@ -98,6 +133,18 @@ export default function MealsSection({ userId }: { userId: string }) {
     load();
   }
 
+  function quickAdd(forDate: string, forType: string) {
+    setDate(forDate);
+    setMealType(forType);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => descRef.current?.focus(), 300);
+  }
+
+  const dayStripDates = lastNDays(7);
+  const dayMeals = meals.filter((m) => m.date === selectedDate);
+  const mealsByType: Record<string, Meal> = {};
+  dayMeals.forEach((m) => (mealsByType[m.meal_type] = m));
+
   return (
     <div className="card p-5">
       <div className="flex items-center gap-2 mb-3">
@@ -106,6 +153,7 @@ export default function MealsSection({ userId }: { userId: string }) {
       </div>
 
       <form
+        ref={formRef}
         onSubmit={handleSave}
         className="grid sm:grid-cols-[auto_auto_1fr_auto] gap-2 mb-4"
       >
@@ -128,6 +176,7 @@ export default function MealsSection({ userId }: { userId: string }) {
           ))}
         </select>
         <input
+          ref={descRef}
           type="text"
           placeholder="¿Qué comiste?"
           value={description}
@@ -138,51 +187,145 @@ export default function MealsSection({ userId }: { userId: string }) {
         </button>
       </form>
 
+      {/* Selector Lista / Por día */}
+      <div className="flex bg-paper border border-line rounded-xl p-1 mb-4">
+        <button
+          onClick={() => setMode("lista")}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition press ${
+            mode === "lista" ? "bg-clay text-paper" : "text-soft"
+          }`}
+        >
+          Lista
+        </button>
+        <button
+          onClick={() => setMode("dia")}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition press ${
+            mode === "dia" ? "bg-clay text-paper" : "text-soft"
+          }`}
+        >
+          Por día
+        </button>
+      </div>
+
       {loading ? (
         <p className="text-sm text-soft">cargando…</p>
-      ) : meals.length === 0 ? (
-        <p className="text-sm text-soft">
-          Todavía no registraste comidas esta semana.
-        </p>
-      ) : (
-        <ul className="divide-y divide-line">
-          {meals.map((m) => (
-            <li key={m.id} className="py-2.5 text-sm">
-              <div className="flex items-start justify-between gap-2">
-                <button
-                  onClick={() => openView(m)}
-                  className="flex items-start gap-3 min-w-0 text-left flex-1 press"
-                >
-                  <span className="font-mono text-xs text-soft w-14 shrink-0 pt-0.5">
-                    {formatShort(m.date)}
-                  </span>
-                  <div className="min-w-0">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber/20 text-ink shrink-0 inline-block mb-1">
-                      {m.meal_type}
+      ) : mode === "lista" ? (
+        meals.length === 0 ? (
+          <p className="text-sm text-soft">Todavía no registraste comidas esta semana.</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {meals.map((m) => (
+              <li key={m.id} className="py-2.5 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <button
+                    onClick={() => openView(m)}
+                    className="flex items-start gap-3 min-w-0 text-left flex-1 press"
+                  >
+                    <span className="font-mono text-xs text-soft w-14 shrink-0 pt-0.5">
+                      {formatShort(m.date)}
                     </span>
-                    <p className="text-ink line-clamp-2 leading-snug">{m.description}</p>
+                    <div className="min-w-0">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber/20 text-ink shrink-0 inline-block mb-1">
+                        {m.meal_type}
+                      </span>
+                      <p className="text-ink line-clamp-2 leading-snug">{m.description}</p>
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                    <button
+                      onClick={() => openEdit(m)}
+                      className="text-soft hover:text-clay press"
+                      aria-label="Editar comida"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(m.id)}
+                      className="text-soft hover:text-clay press"
+                      aria-label="Eliminar comida"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
-                </button>
-                <div className="flex items-center gap-2 shrink-0 pt-0.5">
-                  <button
-                    onClick={() => openEdit(m)}
-                    className="text-soft hover:text-clay press"
-                    aria-label="Editar comida"
-                  >
-                    <Pencil size={13} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(m.id)}
-                    className="text-soft hover:text-clay press"
-                    aria-label="Eliminar comida"
-                  >
-                    <X size={14} />
-                  </button>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : (
+        <div>
+          {/* Tira de días */}
+          <div className="flex gap-2 overflow-x-auto pb-1.5 mb-4 -mx-1 px-1">
+            {dayStripDates.map((iso) => {
+              const d = new Date(iso + "T00:00:00");
+              const has = meals.some((m) => m.date === iso);
+              const active = iso === selectedDate;
+              return (
+                <button
+                  key={iso}
+                  onClick={() => setSelectedDate(iso)}
+                  className={`shrink-0 w-12 py-2 rounded-xl border text-center press ${
+                    active ? "bg-clay border-clay" : "border-line bg-paper"
+                  }`}
+                >
+                  <p className={`font-mono text-[9px] uppercase ${active ? "text-paper" : "text-soft"}`}>
+                    {DIAS_CORTOS[d.getDay()]}
+                  </p>
+                  <p className={`font-display text-base ${active ? "text-paper" : "text-ink"}`}>{d.getDate()}</p>
+                  <span
+                    className={`block w-1 h-1 rounded-full mx-auto mt-1 ${
+                      has ? (active ? "bg-paper" : "bg-moss") : "invisible"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Diario del día */}
+          <p className="font-display text-lg text-ink mb-0.5">{formatLong(selectedDate)}</p>
+          <p className="text-xs text-soft mb-3">
+            {dayMeals.length} de {TIPOS.length} comidas registradas
+          </p>
+
+          <div className="divide-y divide-line">
+            {TIPOS.map((t) => {
+              const m = mealsByType[t];
+              const Icon = TIPO_ICON[t];
+              return (
+                <div key={t} className="flex items-start gap-3 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-paper border border-line flex items-center justify-center shrink-0">
+                    <Icon size={14} className="text-soft" strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-soft mb-0.5">{t}</p>
+                    {m ? (
+                      <button onClick={() => openView(m)} className="text-sm text-ink text-left leading-snug press">
+                        {m.description}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => quickAdd(selectedDate, t)}
+                        className="flex items-center gap-1.5 text-sm text-soft italic press"
+                      >
+                        <Plus size={13} className="shrink-0" /> Sin registrar — tocá para cargar
+                      </button>
+                    )}
+                  </div>
+                  {m && (
+                    <button
+                      onClick={() => openEdit(m)}
+                      className="text-soft hover:text-clay press shrink-0 mt-0.5"
+                      aria-label="Editar comida"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Popup de detalle / edición */}
