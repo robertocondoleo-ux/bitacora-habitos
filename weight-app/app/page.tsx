@@ -18,7 +18,7 @@ export default function Home() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper">
+    <div className="min-h-screen flex items-center justify-center">
       <p className="font-mono text-sm text-soft">cargando…</p>
     </div>
   );

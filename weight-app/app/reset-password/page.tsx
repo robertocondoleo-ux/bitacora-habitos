@@ -50,14 +50,14 @@ export default function ResetPasswordPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="font-mono text-sm text-soft">cargando…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="font-display text-3xl text-ink">Bitácora</h1>

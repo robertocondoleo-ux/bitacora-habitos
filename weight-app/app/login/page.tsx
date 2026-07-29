@@ -103,7 +103,7 @@ export default function LoginPage() {
 
   if (signupSent) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
         <div className="w-full max-w-sm text-center">
           <div className="w-16 h-16 rounded-2xl bg-clay/10 text-clay flex items-center justify-center mx-auto mb-5">
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
   if (mode === "recover") {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
@@ -196,7 +196,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
         <div className="fixed top-4 right-4 z-20"><ThemeToggle /></div>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">

@@ -116,7 +116,7 @@ export default function Dashboard() {
 
   if (checking || !user) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="font-mono text-sm text-soft">cargando…</p>
       </div>
     );
@@ -126,7 +126,7 @@ export default function Dashboard() {
   const isExtraActive = extraTabs.some((t) => t.id === tab);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen">
       <WhatsNewModal />
       {settingsOpen && (
         <AccountSettingsModal
@@ -140,7 +140,7 @@ export default function Dashboard() {
         />
       )}
 
-      <header className="border-b border-line bg-paper/85 backdrop-blur sticky top-0 z-10">
+      <header className="glass sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-ink text-paper flex items-center justify-center font-display text-lg shrink-0">
