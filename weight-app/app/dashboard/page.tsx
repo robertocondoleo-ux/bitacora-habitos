@@ -49,12 +49,12 @@ type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
 type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "composicion" | "especialista" | "pacientes";
 type Tab = MainTab | ExtraTab;
 
-const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home }[] = [
-  { id: "inicio", label: "Inicio", icon: Home },
-  { id: "peso", label: "Peso", icon: Scale },
-  { id: "pasos", label: "Pasos", icon: Footprints },
-  { id: "habitos", label: "Hábitos", icon: ListChecks },
-  { id: "comidas", label: "Comidas", icon: UtensilsCrossed },
+const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home; idleColor: string }[] = [
+  { id: "inicio", label: "Inicio", icon: Home, idleColor: "text-amber" },
+  { id: "peso", label: "Peso", icon: Scale, idleColor: "text-clay" },
+  { id: "pasos", label: "Pasos", icon: Footprints, idleColor: "text-sky" },
+  { id: "habitos", label: "Hábitos", icon: ListChecks, idleColor: "text-moss" },
+  { id: "comidas", label: "Comidas", icon: UtensilsCrossed, idleColor: "text-amber" },
 ];
 
 // Módulos base que ve cualquier cuenta desde el botón "Más".
@@ -143,7 +143,7 @@ export default function Dashboard() {
       <header className="glass sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-ink text-paper flex items-center justify-center font-display text-lg shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber to-clay text-paper flex items-center justify-center font-display font-extrabold text-lg shrink-0 shadow-md">
               B
             </div>
             <div>
@@ -252,7 +252,10 @@ export default function Dashboard() {
       )}
 
       <nav className="fixed bottom-4 left-4 right-4 z-10">
-        <div className="max-w-lg mx-auto glass rounded-full shadow-lg px-1.5 py-1.5 flex items-center justify-between">
+        <div
+          className="max-w-lg mx-auto glass rounded-full px-1.5 py-1.5 flex items-center justify-between"
+          style={{ boxShadow: "0 16px 40px -8px var(--glow-1), 0 8px 24px -6px var(--glow-2)" }}
+        >
           {MAIN_TABS.map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;
@@ -267,7 +270,7 @@ export default function Dashboard() {
                   active ? "bg-gradient-to-br from-amber to-clay px-3.5 shadow-md" : "px-2.5"
                 }`}
               >
-                <Icon size={16} strokeWidth={2.2} className={active ? "text-paper" : "text-soft"} />
+                <Icon size={16} strokeWidth={2.2} className={active ? "text-paper" : t.idleColor} />
                 {active && <span className="text-[11px] font-semibold text-paper whitespace-nowrap">{t.label}</span>}
               </button>
             );
