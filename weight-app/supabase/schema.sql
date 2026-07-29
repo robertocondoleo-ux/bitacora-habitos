@@ -49,8 +49,15 @@ create table if not exists habits (
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
   active boolean default true,
+  -- 'daily': todos los días. 'weekly': target_count veces por semana (no importa qué días).
+  frequency_type text not null default 'daily' check (frequency_type in ('daily', 'weekly')),
+  target_count integer,
   created_at timestamptz default now()
 );
+
+-- Por si la tabla ya existía de una instalación anterior sin estas columnas.
+alter table habits add column if not exists frequency_type text not null default 'daily' check (frequency_type in ('daily', 'weekly'));
+alter table habits add column if not exists target_count integer;
 
 -- Check diario de cada hábito
 create table if not exists habit_logs (
