@@ -70,6 +70,8 @@ export default function QuickStats({ userId }: { userId: string }) {
       icon: Scale,
       label: "Peso actual",
       value: currentWeight ? `${currentWeight.toFixed(1)} kg` : "—",
+      iconBg: "bg-gradient-to-br from-amber to-clay",
+      rotate: "-rotate-[0.6deg]",
     },
     {
       icon: TrendingDown,
@@ -84,30 +86,38 @@ export default function QuickStats({ userId }: { userId: string }) {
           : totalChange !== null && totalChange > 0
           ? "text-clay"
           : "text-ink",
+      iconBg: "bg-gradient-to-br from-moss to-moss",
+      rotate: "rotate-[0.6deg]",
     },
     {
       icon: Footprints,
       label: "Pasos hoy",
       value: stepsToday !== null ? stepsToday.toLocaleString("es-AR") : "—",
+      iconBg: "bg-gradient-to-br from-sky to-sky2",
+      rotate: "-rotate-[0.4deg]",
     },
     {
       icon: CheckCircle2,
       label: "Hábitos hoy",
       value: habitsTotal > 0 ? `${habitsDone}/${habitsTotal}` : "—",
+      iconBg: "bg-gradient-to-br from-amber to-clay",
+      rotate: "rotate-[0.4deg]",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
       {stats.map((s) => (
-        <div key={s.label} className="stat-card p-4">
-          <s.icon size={16} className="text-clay mb-2" strokeWidth={2} />
-          <p className="text-xs text-soft mb-0.5">{s.label}</p>
-          <p
-            className={`font-display text-xl ${s.valueColor || "text-ink"}`}
-          >
-            {s.value}
-          </p>
+        <div key={s.label} className={`stat-chip ${s.rotate}`}>
+          <div className={`stat-chip-icon ${s.iconBg}`}>
+            <s.icon size={15} strokeWidth={2.2} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-soft mb-0.5 truncate">{s.label}</p>
+            <p className={`font-mono font-semibold text-[15px] ${s.valueColor || "text-ink"}`}>
+              {s.value}
+            </p>
+          </div>
         </div>
       ))}
     </div>

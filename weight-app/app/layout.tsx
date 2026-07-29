@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Nunito, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
 import { themeInitScript } from "@/lib/theme";
 
-const fraunces = Fraunces({
+const display = Nunito({
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  weight: ["400", "500", "600"],
+  variable: "--font-display",
+  weight: ["700", "800", "900"],
 });
 
 const inter = Inter({
@@ -52,7 +52,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${fraunces.variable} ${inter.variable} ${mono.variable} font-body`}
+        className={`${display.variable} ${inter.variable} ${mono.variable} font-body`}
       >
         <RegisterSW />
         {children}
