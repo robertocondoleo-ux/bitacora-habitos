@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO, isoDaysAgo, weekStart } from "@/lib/dates";
-import { Footprints } from "lucide-react";
+import { Footprints, Watch, Loader2 } from "lucide-react";
+import { isNativeApp, syncTodayStepsFromHealthConnect } from "@/lib/health";
 
 type StepEntry = { date: string; steps: number };
 
@@ -26,6 +27,9 @@ export default function StepsSection({ userId }: { userId: string }) {
   const [date, setDate] = useState(todayISO());
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const nativeApp = isNativeApp();
 
   const today = todayISO();
   const monday = useMemo(() => weekStart(today), [today]);
@@ -70,6 +74,19 @@ export default function StepsSection({ userId }: { userId: string }) {
     setValue("");
     setSaving(false);
     load();
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncMsg(null);
+    const result = await syncTodayStepsFromHealthConnect(userId);
+    setSyncing(false);
+    if (result.ok) {
+      setSyncMsg(`¡Listo! ${result.steps.toLocaleString("es-AR")} pasos sincronizados 🎉`);
+      load();
+    } else {
+      setSyncMsg(result.reason);
+    }
   }
 
   function stepsFor(d: string): number {
@@ -148,6 +165,21 @@ export default function StepsSection({ userId }: { userId: string }) {
             })}
           </div>
         </>
+      )}
+
+      {nativeApp && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={syncing}
+            className="w-full flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-paper bg-gradient-to-br from-sky to-sky2 press disabled:opacity-60"
+          >
+            {syncing ? <Loader2 size={15} className="animate-spin" /> : <Watch size={15} />}
+            {syncing ? "Sincronizando…" : "Sincronizar pasos del teléfono"}
+          </button>
+          {syncMsg && <p className="text-xs text-soft text-center mt-2">{syncMsg}</p>}
+        </div>
       )}
 
       <form onSubmit={handleSave} className="flex gap-2">
