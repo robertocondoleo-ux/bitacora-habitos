@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -49,11 +50,7 @@ export default function ResetPasswordPage() {
   }
 
   if (checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="font-mono text-sm text-soft">cargando…</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

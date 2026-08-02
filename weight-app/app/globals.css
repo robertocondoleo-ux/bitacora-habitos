@@ -258,3 +258,22 @@ button {
 .animate-flame-pulse {
   animation: flame-pulse 2.4s ease-in-out infinite;
 }
+
+/* ---- Pantalla de carga: personaje caminando ---- */
+@keyframes walk-across {
+  0% { left: -10%; }
+  100% { left: 110%; }
+}
+@keyframes walk-bob {
+  from { transform: translateY(0) scaleX(1); }
+  to { transform: translateY(-5px) scaleX(1); }
+}
+.loading-walker-track {
+  position: absolute;
+  bottom: 2px;
+  animation: walk-across 2.1s linear infinite;
+}
+.loading-walker-bob {
+  display: inline-block;
+  animation: walk-bob 0.4s ease-in-out infinite alternate;
+}

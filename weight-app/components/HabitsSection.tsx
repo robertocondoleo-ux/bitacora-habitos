@@ -31,6 +31,7 @@ export default function HabitsSection({ userId }: { userId: string }) {
   const [frequency, setFrequency] = useState<Frequency>("daily");
   const [targetCount, setTargetCount] = useState(3);
   const [loading, setLoading] = useState(true);
+  const [pickedDate, setPickedDate] = useState(isoDaysAgo(1));
 
   const today = todayISO();
   const monday = useMemo(() => weekStart(today), [today]);
@@ -254,6 +255,43 @@ export default function HabitsSection({ userId }: { userId: string }) {
               ))}
             </HabitGroup>
           )}
+
+          <div className="pt-4 border-t border-dashed border-line">
+            <div className="flex items-center gap-2 mb-3">
+              <CalendarDays size={14} className="text-sky" strokeWidth={2.2} />
+              <p className="text-[11px] uppercase tracking-wide text-soft">Cargar un día anterior</p>
+            </div>
+            <input
+              type="date"
+              value={pickedDate}
+              max={today}
+              onChange={(e) => setPickedDate(e.target.value)}
+              className="mb-3"
+            />
+            <div className="space-y-2">
+              {habits.map((h) => {
+                const on = isChecked(h.id, pickedDate);
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => toggle(h.id, pickedDate)}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-panel/60 border border-line press text-left"
+                  >
+                    <span
+                      className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center border-2 ${
+                        on
+                          ? "bg-gradient-to-br from-moss to-moss border-transparent text-paper animate-check-pop"
+                          : "border-line"
+                      }`}
+                    >
+                      {on && <Check size={12} strokeWidth={3} />}
+                    </span>
+                    <span className="font-display font-bold text-sm truncate">{h.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

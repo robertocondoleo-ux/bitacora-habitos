@@ -43,6 +43,7 @@ import EntrenadorPatients from "@/components/EntrenadorPatients";
 import WhatsNewModal from "@/components/WhatsNewModal";
 import AccountSettingsModal from "@/components/AccountSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
+import LoadingScreen from "@/components/LoadingScreen";
 import type { Role } from "@/lib/specialistData";
 
 type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
@@ -115,11 +116,7 @@ export default function Dashboard() {
   }
 
   if (checking || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="font-mono text-sm text-soft">cargando…</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const extraTabs = extraTabsForRole(role);
