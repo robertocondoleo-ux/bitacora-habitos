@@ -6,8 +6,15 @@ import { todayISO } from "@/lib/dates";
 import QuickStats from "@/components/QuickStats";
 
 type HabitToday = { id: string; name: string; checked: boolean };
+type NavTarget = "peso" | "pasos" | "habitos";
 
-export default function HomeSummary({ userId }: { userId: string }) {
+export default function HomeSummary({
+  userId,
+  onNavigate,
+}: {
+  userId: string;
+  onNavigate?: (tab: NavTarget) => void;
+}) {
   const [current, setCurrent] = useState<number | null>(null);
   const [starting, setStarting] = useState<number | null>(null);
   const [goal, setGoal] = useState<number | null>(null);
@@ -133,7 +140,7 @@ export default function HomeSummary({ userId }: { userId: string }) {
         </div>
       </div>
 
-      <QuickStats userId={userId} />
+      <QuickStats userId={userId} onNavigate={onNavigate} />
 
       <div className="glass-card p-4">
         <p className="text-xs uppercase tracking-wide text-soft mb-3">Hábitos de hoy</p>

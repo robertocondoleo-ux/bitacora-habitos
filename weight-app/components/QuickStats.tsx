@@ -3,9 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO } from "@/lib/dates";
-import { Scale, TrendingDown, Footprints, CheckCircle2 } from "lucide-react";
+import { Scale, TrendingDown, Footprints, CheckCircle2, ChevronRight } from "lucide-react";
 
-export default function QuickStats({ userId }: { userId: string }) {
+type NavTarget = "peso" | "pasos" | "habitos";
+
+export default function QuickStats({
+  userId,
+  onNavigate,
+}: {
+  userId: string;
+  onNavigate?: (tab: NavTarget) => void;
+}) {
   const [loading, setLoading] = useState(true);
   const [currentWeight, setCurrentWeight] = useState<number | null>(null);
   const [totalChange, setTotalChange] = useState<number | null>(null);
@@ -72,6 +80,7 @@ export default function QuickStats({ userId }: { userId: string }) {
       value: currentWeight ? `${currentWeight.toFixed(1)} kg` : "—",
       iconBg: "bg-gradient-to-br from-amber to-clay",
       rotate: "-rotate-[0.6deg]",
+      target: "peso" as NavTarget,
     },
     {
       icon: TrendingDown,
@@ -88,6 +97,7 @@ export default function QuickStats({ userId }: { userId: string }) {
           : "text-ink",
       iconBg: "bg-gradient-to-br from-moss to-moss",
       rotate: "rotate-[0.6deg]",
+      target: "peso" as NavTarget,
     },
     {
       icon: Footprints,
@@ -95,6 +105,7 @@ export default function QuickStats({ userId }: { userId: string }) {
       value: stepsToday !== null ? stepsToday.toLocaleString("es-AR") : "—",
       iconBg: "bg-gradient-to-br from-sky to-sky2",
       rotate: "-rotate-[0.4deg]",
+      target: "pasos" as NavTarget,
     },
     {
       icon: CheckCircle2,
@@ -102,23 +113,29 @@ export default function QuickStats({ userId }: { userId: string }) {
       value: habitsTotal > 0 ? `${habitsDone}/${habitsTotal}` : "—",
       iconBg: "bg-gradient-to-br from-amber to-clay",
       rotate: "rotate-[0.4deg]",
+      target: "habitos" as NavTarget,
     },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
       {stats.map((s) => (
-        <div key={s.label} className={`stat-chip ${s.rotate}`}>
+        <button
+          key={s.label}
+          onClick={() => onNavigate?.(s.target)}
+          className={`stat-chip ${s.rotate} press text-left ${onNavigate ? "cursor-pointer" : ""}`}
+        >
           <div className={`stat-chip-icon ${s.iconBg}`}>
             <s.icon size={15} strokeWidth={2.2} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[10px] uppercase tracking-wide text-soft mb-0.5 truncate">{s.label}</p>
             <p className={`font-mono font-semibold text-[15px] ${s.valueColor || "text-ink"}`}>
               {s.value}
             </p>
           </div>
-        </div>
+          {onNavigate && <ChevronRight size={14} className="text-soft shrink-0" />}
+        </button>
       ))}
     </div>
   );

@@ -45,15 +45,13 @@ export default function StepsGoalCard({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="card p-5">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Target size={15} className="text-clay" strokeWidth={2} />
-            <p className="text-xs uppercase tracking-wide text-soft">
-              Objetivo diario
-            </p>
-          </div>
+    <div className="card p-4 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber to-clay flex items-center justify-center shrink-0">
+          <Target size={17} className="text-paper" strokeWidth={2.2} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wide text-soft font-bold">Meta diaria</p>
           {editing ? (
             <div className="flex items-center gap-2 mt-1">
               <input
@@ -61,47 +59,38 @@ export default function StepsGoalCard({ userId }: { userId: string }) {
                 step="500"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                className="w-28"
+                className="w-24"
                 autoFocus
                 placeholder="pasos"
               />
-              <button
-                onClick={saveGoal}
-                disabled={saving}
-                className="btn-primary text-sm px-3 py-1.5"
-              >
+              <button onClick={saveGoal} disabled={saving} className="btn-primary text-xs px-3 py-1.5">
                 Guardar
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="group flex items-center gap-1.5 mt-1"
-            >
-              <span className="font-display text-2xl text-ink">
-                {goal ? `${parseInt(goal, 10).toLocaleString("es-AR")} pasos` : "Definir →"}
-              </span>
-              <Pencil
-                size={13}
-                className="text-soft opacity-0 group-hover:opacity-100 transition"
-              />
-            </button>
+            <p className="font-display font-extrabold text-lg truncate">
+              {goal ? `${parseInt(goal, 10).toLocaleString("es-AR")} pasos 🎯` : "Sin definir"}
+            </p>
           )}
         </div>
-
-        <div>
-          <p className="text-xs uppercase tracking-wide text-soft">
-            Promedio diario
-          </p>
-          <p className="font-display text-2xl text-ink mt-1">
-            {loading
-              ? "…"
-              : average !== null
-              ? `${average.toLocaleString("es-AR")} pasos`
-              : "—"}
-          </p>
-        </div>
       </div>
+
+      {!editing && (
+        <button
+          onClick={() => setEditing(true)}
+          className="w-9 h-9 rounded-full bg-gradient-to-br from-sky to-sky2 flex items-center justify-center shrink-0 press"
+          aria-label="Editar meta"
+        >
+          <Pencil size={14} className="text-paper" strokeWidth={2.2} />
+        </button>
+      )}
+
+      {!loading && average !== null && (
+        <div className="text-right shrink-0">
+          <p className="text-[10px] uppercase tracking-wide text-soft font-bold">Promedio</p>
+          <p className="font-mono font-semibold text-sm">{average.toLocaleString("es-AR")}</p>
+        </div>
+      )}
     </div>
   );
 }

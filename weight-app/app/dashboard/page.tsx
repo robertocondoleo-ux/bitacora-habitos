@@ -169,7 +169,7 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-5 pb-24 space-y-6">
-        {tab === "inicio" && <HomeSummary userId={user.id} />}
+        {tab === "inicio" && <HomeSummary userId={user.id} onNavigate={(t) => setTab(t)} />}
 
         {tab === "peso" && (
           <>

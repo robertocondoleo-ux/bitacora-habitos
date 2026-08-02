@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isoDaysAgo, todayISO, weekStart } from "@/lib/dates";
-import { ListChecks, Flame, Check, X } from "lucide-react";
+import { ListChecks, Flame, Check, CalendarDays, Trash2 } from "lucide-react";
+
+const WEEKDAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 
 type Frequency = "daily" | "weekly";
 type Habit = {
@@ -32,6 +34,7 @@ export default function HabitsSection({ userId }: { userId: string }) {
 
   const today = todayISO();
   const monday = useMemo(() => weekStart(today), [today]);
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(monday, i)), [monday]);
 
   const load = useCallback(async () => {
     const [{ data: h }, { data: l }] = await Promise.all([
@@ -203,6 +206,10 @@ export default function HabitsSection({ userId }: { userId: string }) {
                   rotate={i % 2 === 0 ? "-rotate-[0.5deg]" : "rotate-[0.5deg]"}
                   onToggle={() => toggle(h.id, today)}
                   onRemove={() => removeHabit(h.id)}
+                  weekDays={weekDays}
+                  today={today}
+                  isChecked={isChecked}
+                  onToggleDate={(d) => toggle(h.id, d)}
                 />
               ))}
             </HabitGroup>
@@ -219,6 +226,10 @@ export default function HabitsSection({ userId }: { userId: string }) {
                   rotate={i % 2 === 0 ? "-rotate-[0.5deg]" : "rotate-[0.5deg]"}
                   onToggle={() => toggle(h.id, today)}
                   onRemove={() => removeHabit(h.id)}
+                  weekDays={weekDays}
+                  today={today}
+                  isChecked={isChecked}
+                  onToggleDate={(d) => toggle(h.id, d)}
                 />
               ))}
             </HabitGroup>
@@ -235,6 +246,10 @@ export default function HabitsSection({ userId }: { userId: string }) {
                   rotate={i % 2 === 0 ? "-rotate-[0.5deg]" : "rotate-[0.5deg]"}
                   onToggle={() => toggle(h.id, today)}
                   onRemove={() => removeHabit(h.id)}
+                  weekDays={weekDays}
+                  today={today}
+                  isChecked={isChecked}
+                  onToggleDate={(d) => toggle(h.id, d)}
                 />
               ))}
             </HabitGroup>
@@ -254,6 +269,51 @@ function HabitGroup({ label, children }: { label: string; children: React.ReactN
   );
 }
 
+type HistoryProps = {
+  weekDays: string[];
+  today: string;
+  isChecked: (habitId: string, date: string) => boolean;
+  onToggleDate: (date: string) => void;
+};
+
+function HistoryStrip({
+  habitId,
+  weekDays,
+  today,
+  isChecked,
+  onToggleDate,
+}: HistoryProps & { habitId: string }) {
+  return (
+    <div className="flex justify-between gap-1.5 mt-3 pt-3 border-t border-dashed border-line">
+      {weekDays.map((d, i) => {
+        const on = isChecked(habitId, d);
+        const isToday = d === today;
+        const isFuture = d > today;
+        return (
+          <div key={d} className="flex flex-col items-center gap-1">
+            <span className="text-[9px] font-semibold text-soft">{WEEKDAY_LETTERS[i]}</span>
+            <button
+              type="button"
+              disabled={isFuture}
+              onClick={() => onToggleDate(d)}
+              aria-label={`${on ? "Desmarcar" : "Marcar"} ${d}`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center press transition-all border-2 ${
+                on
+                  ? "bg-gradient-to-br from-moss to-moss border-transparent text-paper"
+                  : isFuture
+                  ? "border-line/50 opacity-40"
+                  : "border-line"
+              } ${isToday ? "ring-2 ring-amber ring-offset-1 ring-offset-panel" : ""}`}
+            >
+              {on && <Check size={12} strokeWidth={3} />}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function HabitRow({
   habit,
   checked,
@@ -261,6 +321,10 @@ function HabitRow({
   rotate,
   onToggle,
   onRemove,
+  weekDays,
+  today,
+  isChecked,
+  onToggleDate,
 }: {
   habit: Habit;
   checked: boolean;
@@ -268,38 +332,58 @@ function HabitRow({
   rotate: string;
   onToggle: () => void;
   onRemove: () => void;
-}) {
+} & HistoryProps) {
+  const [open, setOpen] = useState(false);
   return (
-    <div
-      className={`flex items-center gap-3 p-3 rounded-[20px] bg-panel/60 border border-line ${rotate}`}
-    >
-      <button
-        onClick={onToggle}
-        aria-label={`Marcar ${habit.name}`}
-        className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center press transition-all ${
-          checked
-            ? "bg-gradient-to-br from-moss to-moss text-paper animate-check-pop"
-            : "border-2 border-line"
-        }`}
-      >
-        {checked && <Check size={14} strokeWidth={3} />}
-      </button>
-      <div className="flex-1 min-w-0">
-        <p className={`font-display font-bold text-sm truncate ${checked ? "text-soft line-through" : "text-ink"}`}>
-          {habit.name}
-        </p>
-        <p className="text-[11px] text-soft">
-          {checked ? "Completado hoy" : streak > 0 ? `Todos los días · racha de ${streak}` : "Todos los días"}
-        </p>
-      </div>
-      {streak > 0 ? (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber to-clay flex items-center justify-center text-paper shrink-0">
-          <Flame size={14} strokeWidth={2.4} />
-        </div>
-      ) : (
-        <button onClick={onRemove} className="text-soft hover:text-clay px-1 shrink-0" title="Quitar hábito">
-          <X size={14} />
+    <div className={`p-3 rounded-[20px] bg-panel/60 border border-line ${rotate}`}>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onToggle}
+          aria-label={`Marcar ${habit.name}`}
+          className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center press transition-all ${
+            checked
+              ? "bg-gradient-to-br from-moss to-moss text-paper animate-check-pop"
+              : "border-2 border-line"
+          }`}
+        >
+          {checked && <Check size={14} strokeWidth={3} />}
         </button>
+        <div className="flex-1 min-w-0">
+          <p className={`font-display font-bold text-sm truncate ${checked ? "text-soft line-through" : "text-ink"}`}>
+            {habit.name}
+          </p>
+          <p className="text-[11px] text-soft flex items-center gap-1">
+            {streak > 0 && <Flame size={11} className="text-clay" strokeWidth={2.4} />}
+            {checked ? "Completado hoy" : streak > 0 ? `Todos los días · racha de ${streak}` : "Todos los días"}
+          </p>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 press transition ${
+            open ? "bg-gradient-to-br from-sky to-sky2 text-paper" : "bg-panel border border-line text-soft"
+          }`}
+          title="Cargar días anteriores"
+          aria-label="Cargar días anteriores"
+        >
+          <CalendarDays size={14} strokeWidth={2.2} />
+        </button>
+      </div>
+      {open && (
+        <>
+          <HistoryStrip
+            habitId={habit.id}
+            weekDays={weekDays}
+            today={today}
+            isChecked={isChecked}
+            onToggleDate={onToggleDate}
+          />
+          <button
+            onClick={onRemove}
+            className="flex items-center gap-1.5 text-[11px] text-soft hover:text-clay mt-3"
+          >
+            <Trash2 size={12} /> Quitar hábito
+          </button>
+        </>
       )}
     </div>
   );
@@ -312,6 +396,10 @@ function WeeklyHabitRow({
   rotate,
   onToggle,
   onRemove,
+  weekDays,
+  today,
+  isChecked,
+  onToggleDate,
 }: {
   habit: Habit;
   progress: number;
@@ -319,7 +407,8 @@ function WeeklyHabitRow({
   rotate: string;
   onToggle: () => void;
   onRemove: () => void;
-}) {
+} & HistoryProps) {
+  const [open, setOpen] = useState(false);
   const target = habit.target_count ?? 1;
   const met = progress >= target;
   return (
@@ -338,17 +427,19 @@ function WeeklyHabitRow({
           <p className="font-display font-bold text-sm text-ink truncate">{habit.name}</p>
           <p className="text-[11px] text-soft">
             {target} {target === 1 ? "vez" : "veces"} por semana · {progress}/{target}
+            {met && " · ¡completo! 🎉"}
           </p>
         </div>
-        {met ? (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-moss to-moss flex items-center justify-center text-paper shrink-0">
-            <Check size={14} strokeWidth={3} />
-          </div>
-        ) : (
-          <button onClick={onRemove} className="text-soft hover:text-clay px-1 shrink-0" title="Quitar hábito">
-            <X size={14} />
-          </button>
-        )}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 press transition ${
+            open ? "bg-gradient-to-br from-sky to-sky2 text-paper" : "bg-panel border border-line text-soft"
+          }`}
+          title="Cargar días anteriores"
+          aria-label="Cargar días anteriores"
+        >
+          <CalendarDays size={14} strokeWidth={2.2} />
+        </button>
       </div>
       <div className="flex gap-1 mt-2 ml-10">
         {Array.from({ length: target }).map((_, i) => (
@@ -358,6 +449,23 @@ function WeeklyHabitRow({
           />
         ))}
       </div>
+      {open && (
+        <>
+          <HistoryStrip
+            habitId={habit.id}
+            weekDays={weekDays}
+            today={today}
+            isChecked={isChecked}
+            onToggleDate={onToggleDate}
+          />
+          <button
+            onClick={onRemove}
+            className="flex items-center gap-1.5 text-[11px] text-soft hover:text-clay mt-3"
+          >
+            <Trash2 size={12} /> Quitar hábito
+          </button>
+        </>
+      )}
     </div>
   );
 }
