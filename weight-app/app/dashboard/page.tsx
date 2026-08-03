@@ -43,6 +43,7 @@ import WhatsNewModal from "@/components/WhatsNewModal";
 import AccountSettingsModal from "@/components/AccountSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import LoadingScreen from "@/components/LoadingScreen";
+import OnboardingModal from "@/components/OnboardingModal";
 import type { Role } from "@/lib/specialistData";
 
 type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
@@ -80,6 +81,8 @@ export default function Dashboard() {
   const [weightRefresh, setWeightRefresh] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [pendingNotice, setPendingNotice] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -90,10 +93,11 @@ export default function Dashboard() {
       setUser(data.session.user);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, onboarded")
         .eq("id", data.session.user.id)
         .maybeSingle();
       setRole((profile?.role as Role) || "usuario");
+      setNeedsOnboarding(profile?.onboarded === false);
       setChecking(false);
     });
 
@@ -122,6 +126,15 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
+      {needsOnboarding && (
+        <OnboardingModal
+          userId={user.id}
+          onDone={(requestedNutricionista) => {
+            setNeedsOnboarding(false);
+            if (requestedNutricionista) setPendingNotice(true);
+          }}
+        />
+      )}
       <WhatsNewModal />
       {settingsOpen && (
         <AccountSettingsModal
@@ -162,6 +175,19 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {pendingNotice && (
+        <div className="max-w-lg mx-auto px-4 pt-4">
+          <div className="rounded-2xl bg-amber/10 border border-amber/30 px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-ink">
+              Tu solicitud para ser nutricionista está pendiente de aprobación. Mientras tanto, seguís como usuario.
+            </p>
+            <button onClick={() => setPendingNotice(false)} className="text-soft hover:text-clay shrink-0">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-lg mx-auto px-4 pt-5 pb-24 space-y-6">
         {tab === "inicio" && <HomeSummary userId={user.id} onNavigate={(t) => setTab(t)} />}

@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Role } from "@/lib/specialistData";
-import { Settings, X } from "lucide-react";
+import { Settings, X, Check, UserX } from "lucide-react";
 
 const ROLES: { id: Role; label: string; desc: string }[] = [
   { id: "usuario", label: "Usuario", desc: "Seguimiento personal, podés vincularte con un especialista." },
-  { id: "nutricionista", label: "Nutricionista", desc: "Ves pacientes que se vinculen con vos y les dejás recomendaciones." },
+  { id: "nutricionista", label: "Nutricionista", desc: "Ves pacientes que se vinculen con vos y les dejás recomendaciones. Pide aprobación." },
   { id: "entrenador", label: "Entrenador", desc: "Ves pacientes que se vinculen con vos y les asignás entrenamiento." },
 ];
+
+type PendingRequest = { id: string; email: string; display_name: string | null };
 
 export default function AccountSettingsModal({
   userId,
@@ -24,26 +26,62 @@ export default function AccountSettingsModal({
 }) {
   const [role, setRole] = useState<Role>(currentRole);
   const [displayName, setDisplayName] = useState("");
+  const [roleRequest, setRoleRequest] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pending, setPending] = useState<PendingRequest[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const loadPending = useCallback(async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, email, display_name")
+      .eq("role_request", "nutricionista");
+    setPending((data as PendingRequest[]) || []);
+  }, []);
 
   useEffect(() => {
     supabase
       .from("profiles")
-      .select("display_name")
+      .select("display_name, role_request, is_admin")
       .eq("id", userId)
       .maybeSingle()
-      .then(({ data }) => setDisplayName(data?.display_name || ""));
-  }, [userId]);
+      .then(({ data }) => {
+        setDisplayName(data?.display_name || "");
+        setRoleRequest(data?.role_request || null);
+        setIsAdmin(!!data?.is_admin);
+        if (data?.is_admin) loadPending();
+      });
+  }, [userId, loadPending]);
 
   async function save() {
     setSaving(true);
+    const wantsNutriApproval = role === "nutricionista" && currentRole !== "nutricionista";
     await supabase
       .from("profiles")
-      .update({ role, display_name: displayName.trim() || null })
+      .update({
+        // Si pide ser nutricionista y todavía no lo es, no se activa solo:
+        // queda como "usuario" con una solicitud pendiente de aprobación.
+        role: wantsNutriApproval ? "usuario" : role,
+        role_request: wantsNutriApproval ? "nutricionista" : null,
+        display_name: displayName.trim() || null,
+      })
       .eq("id", userId);
     setSaving(false);
-    onRoleChange(role);
+    onRoleChange(wantsNutriApproval ? "usuario" : role);
     onClose();
+  }
+
+  async function approve(patientProfileId: string) {
+    await supabase
+      .from("profiles")
+      .update({ role: "nutricionista", role_request: null })
+      .eq("id", patientProfileId);
+    loadPending();
+  }
+
+  async function reject(patientProfileId: string) {
+    await supabase.from("profiles").update({ role_request: null }).eq("id", patientProfileId);
+    loadPending();
   }
 
   return (
@@ -60,6 +98,48 @@ export default function AccountSettingsModal({
           </button>
         </div>
 
+        {isAdmin && (
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-wide text-soft mb-2">
+              Solicitudes pendientes ({pending.length})
+            </p>
+            {pending.length === 0 ? (
+              <p className="text-xs text-soft">Nadie está esperando aprobación.</p>
+            ) : (
+              <div className="space-y-2">
+                {pending.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-moss/10 border border-moss/25"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-700 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                      {(p.display_name || p.email)?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-ink truncate">{p.display_name || p.email}</p>
+                      <p className="text-[11px] text-soft">quiere ser nutricionista</p>
+                    </div>
+                    <button
+                      onClick={() => approve(p.id)}
+                      className="w-8 h-8 rounded-full bg-moss text-paper flex items-center justify-center press shrink-0"
+                      aria-label="Aprobar"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => reject(p.id)}
+                      className="w-8 h-8 rounded-full border border-line text-soft flex items-center justify-center press shrink-0"
+                      aria-label="Rechazar"
+                    >
+                      <UserX size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <label className="text-xs text-soft mb-1 block">Nombre para mostrar (opcional)</label>
         <input
           type="text"
@@ -70,6 +150,11 @@ export default function AccountSettingsModal({
         />
 
         <label className="text-xs text-soft mb-2 block">Tipo de cuenta</label>
+        {roleRequest === "nutricionista" && currentRole !== "nutricionista" && (
+          <p className="text-xs text-amber mb-2">
+            Tu solicitud para ser nutricionista está pendiente de aprobación.
+          </p>
+        )}
         <div className="space-y-2 mb-6">
           {ROLES.map((r) => (
             <button

@@ -227,6 +227,13 @@ alter table profiles add column if not exists role text not null default 'usuari
   check (role in ('usuario','nutricionista','entrenador'));
 alter table profiles add column if not exists display_name text;
 
+-- Onboarding (pantalla de bienvenida la primera vez) + solicitud de
+-- rol nutricionista pendiente de aprobación + cuenta administradora.
+alter table profiles add column if not exists onboarded boolean not null default false;
+alter table profiles add column if not exists role_request text check (role_request in ('nutricionista'));
+alter table profiles add column if not exists is_admin boolean not null default false;
+update profiles set is_admin = true where email = 'roberto.condoleo@gmail.com';
+
 -- 2) Vínculo entre un paciente y su especialista, con qué secciones comparte.
 create table if not exists specialist_links (
   id uuid primary key default gen_random_uuid(),
@@ -366,3 +373,15 @@ create policy "body_comp_entries: especialista ve si fue compartido" on body_com
 --    — nunca de otros usuarios normales.
 create policy "profiles: buscar especialistas" on profiles
   for select using (role in ('nutricionista', 'entrenador'));
+
+-- 7) La cuenta administradora ve y aprueba/rechaza solicitudes de rol
+--    nutricionista de cualquier cuenta.
+create policy "profiles: admin ve todos" on profiles
+  for select using (
+    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
+  );
+
+create policy "profiles: admin actualiza roles" on profiles
+  for update using (
+    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
+  );
