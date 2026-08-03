@@ -30,6 +30,7 @@ import StepsSection from "@/components/StepsSection";
 import HabitsSection from "@/components/HabitsSection";
 import MonthlyHabitsSummary from "@/components/MonthlyHabitsSummary";
 import MealsSection from "@/components/MealsSection";
+import ShoppingListCard from "@/components/ShoppingListCard";
 import TrainingPlanCard from "@/components/TrainingPlanCard";
 import TrainingLogSection from "@/components/TrainingLogSection";
 import AssignedTrainingCard from "@/components/AssignedTrainingCard";
@@ -217,7 +218,12 @@ export default function Dashboard() {
           </>
         )}
 
-        {tab === "comidas" && <MealsSection userId={user.id} />}
+        {tab === "comidas" && (
+          <>
+            <MealsSection userId={user.id} />
+            <ShoppingListCard userId={user.id} />
+          </>
+        )}
 
         {tab === "entrenamiento" && (
           <>

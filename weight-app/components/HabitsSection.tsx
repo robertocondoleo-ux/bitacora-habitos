@@ -13,6 +13,7 @@ type Habit = {
   name: string;
   frequency_type: Frequency;
   target_count: number | null;
+  assigned_by: string | null;
 };
 type Log = { habit_id: string; date: string; checked: boolean };
 
@@ -41,7 +42,7 @@ export default function HabitsSection({ userId }: { userId: string }) {
     const [{ data: h }, { data: l }] = await Promise.all([
       supabase
         .from("habits")
-        .select("id, name, frequency_type, target_count")
+        .select("id, name, frequency_type, target_count, assigned_by")
         .eq("user_id", userId)
         .eq("active", true)
         .order("created_at", { ascending: true }),
@@ -394,6 +395,9 @@ function HabitRow({
             {streak > 0 && <Flame size={11} className="text-clay" strokeWidth={2.4} />}
             {checked ? "Completado hoy" : streak > 0 ? `Todos los días · racha de ${streak}` : "Todos los días"}
           </p>
+          {habit.assigned_by && (
+            <span className="text-[10px] text-moss font-semibold">🥑 Meta de tu nutricionista</span>
+          )}
         </div>
         <button
           onClick={() => setOpen((v) => !v)}
@@ -467,6 +471,9 @@ function WeeklyHabitRow({
             {target} {target === 1 ? "vez" : "veces"} por semana · {progress}/{target}
             {met && " · ¡completo! 🎉"}
           </p>
+          {habit.assigned_by && (
+            <span className="text-[10px] text-moss font-semibold">🥑 Meta de tu nutricionista</span>
+          )}
         </div>
         <button
           onClick={() => setOpen((v) => !v)}

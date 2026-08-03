@@ -247,6 +247,8 @@ create table if not exists specialist_links (
 );
 
 -- 3) Recetas / recomendaciones que un nutricionista le deja a un paciente.
+--    file_url/file_name son opcionales: se usan cuando el nutricionista
+--    adjunta un PDF en vez de (o además de) texto.
 create table if not exists recipes (
   id uuid primary key default gen_random_uuid(),
   author_id uuid references auth.users(id) on delete cascade not null,
@@ -254,6 +256,37 @@ create table if not exists recipes (
   title text not null,
   description text,
   type text not null default 'recomendacion', -- 'recomendacion' | 'receta'
+  file_url text,
+  file_name text,
+  created_at timestamptz default now()
+);
+
+insert into storage.buckets (id, name, public)
+values ('recipe-files', 'recipe-files', true)
+on conflict (id) do nothing;
+
+-- Metas: reutiliza "habits". Si assigned_by tiene valor, la puso un
+-- nutricionista y se ve/completa igual que cualquier hábito propio.
+alter table habits add column if not exists assigned_by uuid references auth.users(id) on delete set null;
+
+-- Notas privadas del nutricionista sobre un paciente — el paciente
+-- nunca tiene una policy que le deje verlas.
+create table if not exists specialist_notes (
+  id uuid primary key default gen_random_uuid(),
+  specialist_id uuid references auth.users(id) on delete cascade not null,
+  patient_id uuid references auth.users(id) on delete cascade not null,
+  note text not null,
+  updated_at timestamptz default now(),
+  unique (specialist_id, patient_id)
+);
+
+-- Lista de súper del paciente + sugerencias del nutricionista.
+create table if not exists shopping_list_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  item text not null,
+  checked boolean not null default false,
+  suggested_by uuid references auth.users(id) on delete set null,
   created_at timestamptz default now()
 );
 
@@ -273,6 +306,8 @@ create table if not exists assigned_training (
 alter table specialist_links enable row level security;
 alter table recipes enable row level security;
 alter table assigned_training enable row level security;
+alter table specialist_notes enable row level security;
+alter table shopping_list_items enable row level security;
 
 -- El paciente controla su propio vínculo (crearlo, editar qué comparte, borrarlo).
 create policy "specialist_links: paciente gestiona" on specialist_links
@@ -288,6 +323,46 @@ create policy "recipes: nutricionista gestiona las suyas" on recipes
   for all using (auth.uid() = author_id) with check (auth.uid() = author_id);
 create policy "recipes: paciente ve las suyas" on recipes
   for select using (auth.uid() = patient_id);
+
+create policy "recipe-files: nutricionista sube propio" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'recipe-files' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "recipe-files: nutricionista borra propio" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'recipe-files' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "habits: especialista asigna meta" on habits
+  for insert with check (
+    assigned_by = auth.uid()
+    and exists (
+      select 1 from specialist_links sl
+      where sl.patient_id = habits.user_id and sl.specialist_id = auth.uid()
+        and sl.status = 'active' and 'habitos' = any(sl.shared_sections)
+    )
+  );
+create policy "habits: especialista edita metas propias" on habits
+  for update using (assigned_by = auth.uid()) with check (assigned_by = auth.uid());
+
+create policy "specialist_notes: especialista gestiona las suyas" on specialist_notes
+  for all using (auth.uid() = specialist_id) with check (auth.uid() = specialist_id);
+
+create policy "shopping_list_items: propio" on shopping_list_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "shopping_list_items: especialista sugiere" on shopping_list_items
+  for insert with check (
+    suggested_by = auth.uid()
+    and exists (
+      select 1 from specialist_links sl
+      where sl.patient_id = shopping_list_items.user_id and sl.specialist_id = auth.uid()
+        and sl.status = 'active' and 'comidas' = any(sl.shared_sections)
+    )
+  );
+create policy "shopping_list_items: especialista ve si fue compartido" on shopping_list_items
+  for select using (exists (
+    select 1 from specialist_links sl
+    where sl.patient_id = shopping_list_items.user_id and sl.specialist_id = auth.uid()
+      and sl.status = 'active' and 'comidas' = any(sl.shared_sections)
+  ));
 
 create policy "assigned_training: entrenador gestiona" on assigned_training
   for all using (auth.uid() = trainer_id) with check (auth.uid() = trainer_id);
