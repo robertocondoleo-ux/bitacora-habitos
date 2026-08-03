@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO } from "@/lib/dates";
 import QuickStats from "@/components/QuickStats";
+import MoodWaterCard from "@/components/MoodWaterCard";
 
 type HabitToday = { id: string; name: string; checked: boolean };
 type NavTarget = "peso" | "pasos" | "habitos";
@@ -170,6 +171,8 @@ export default function HomeSummary({
           </div>
         )}
       </div>
+
+      <MoodWaterCard userId={userId} />
     </div>
   );
 }

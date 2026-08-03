@@ -78,6 +78,16 @@ create table if not exists steps (
   unique (user_id, date)
 );
 
+-- Ánimo del día + vasos de agua
+create table if not exists daily_wellbeing (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  date date not null default current_date,
+  mood smallint,
+  water_glasses smallint default 0,
+  unique (user_id, date)
+);
+
 -- Comidas
 create table if not exists meals (
   id uuid primary key default gen_random_uuid(),
@@ -148,6 +158,7 @@ alter table weights enable row level security;
 alter table habits enable row level security;
 alter table habit_logs enable row level security;
 alter table steps enable row level security;
+alter table daily_wellbeing enable row level security;
 alter table meals enable row level security;
 alter table training_profile enable row level security;
 alter table training_logs enable row level security;
@@ -168,6 +179,9 @@ create policy "habit_logs: propio" on habit_logs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "steps: propio" on steps
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "daily_wellbeing: propio" on daily_wellbeing
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "meals: propio" on meals

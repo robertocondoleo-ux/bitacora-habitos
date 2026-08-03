@@ -15,7 +15,6 @@ import {
   Dumbbell,
   FileText,
   Salad,
-  Activity,
   UserPlus,
   Users,
   MoreHorizontal,
@@ -47,7 +46,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import type { Role } from "@/lib/specialistData";
 
 type MainTab = "inicio" | "peso" | "pasos" | "habitos" | "comidas";
-type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "composicion" | "especialista" | "pacientes";
+type ExtraTab = "entrenamiento" | "estudios" | "dieta" | "especialista" | "pacientes";
 type Tab = MainTab | ExtraTab;
 
 const MAIN_TABS: { id: MainTab; label: string; icon: typeof Home; idleColor: string }[] = [
@@ -63,7 +62,6 @@ const BASE_EXTRA_TABS: { id: ExtraTab; label: string; icon: typeof Home }[] = [
   { id: "entrenamiento", label: "Entrenamiento", icon: Dumbbell },
   { id: "estudios", label: "Estudios", icon: FileText },
   { id: "dieta", label: "Dieta", icon: Salad },
-  { id: "composicion", label: "Composición corporal", icon: Activity },
 ];
 
 function extraTabsForRole(role: Role): { id: ExtraTab; label: string; icon: typeof Home }[] {
@@ -174,6 +172,8 @@ export default function Dashboard() {
             <WeightSection key={`daily-${weightRefresh}`} userId={user.id} />
             <MonthlyWeightEntry userId={user.id} onSaved={() => setWeightRefresh((k) => k + 1)} />
             <MonthlyWeightSummary key={`summary-${weightRefresh}`} userId={user.id} />
+            <p className="text-xs uppercase tracking-wide text-soft pt-2">Composición corporal</p>
+            <BodyCompSection userId={user.id} />
           </>
         )}
 
@@ -204,8 +204,6 @@ export default function Dashboard() {
         {tab === "estudios" && <StudiesSection userId={user.id} />}
 
         {tab === "dieta" && <DietSection userId={user.id} />}
-
-        {tab === "composicion" && <BodyCompSection userId={user.id} />}
 
         {tab === "especialista" && <AddSpecialistSection userId={user.id} />}
 
