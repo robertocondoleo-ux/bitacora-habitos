@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Role } from "@/lib/specialistData";
-import { Settings, X, Check, UserX } from "lucide-react";
+import { Settings, X, Check, UserX, Link2 } from "lucide-react";
 
 const ROLES: { id: Role; label: string; desc: string }[] = [
   { id: "usuario", label: "Usuario", desc: "Seguimiento personal, podés vincularte con un especialista." },
@@ -30,6 +30,9 @@ export default function AccountSettingsModal({
   const [isAdmin, setIsAdmin] = useState(false);
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [saving, setSaving] = useState(false);
+  const [hasGoogle, setHasGoogle] = useState(false);
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const loadPending = useCallback(async () => {
     const { data } = await supabase
@@ -51,7 +54,26 @@ export default function AccountSettingsModal({
         setIsAdmin(!!data?.is_admin);
         if (data?.is_admin) loadPending();
       });
+
+    supabase.auth.getUserIdentities().then(({ data }) => {
+      setHasGoogle(!!data?.identities?.some((i) => i.provider === "google"));
+    });
   }, [userId, loadPending]);
+
+  async function linkGoogle() {
+    setLinkError(null);
+    setLinkingGoogle(true);
+    const { error } = await supabase.auth.linkIdentity({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) {
+      setLinkError(error.message);
+      setLinkingGoogle(false);
+    }
+    // Si sale bien, el navegador redirecciona a Google y vuelve solo — no
+    // hace falta hacer nada más acá.
+  }
 
   async function save() {
     setSaving(true);
@@ -139,6 +161,28 @@ export default function AccountSettingsModal({
             )}
           </div>
         )}
+
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-wide text-soft mb-2">Cuentas vinculadas</p>
+          {hasGoogle ? (
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-moss/40 bg-moss/10">
+              <Check size={14} className="text-moss shrink-0" />
+              <p className="text-sm text-ink">Google vinculado — ya podés entrar con cualquiera de los dos.</p>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={linkGoogle}
+                disabled={linkingGoogle}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-line text-sm font-medium text-ink press"
+              >
+                <Link2 size={14} className="text-soft" />
+                {linkingGoogle ? "Redirigiendo…" : "Vincular con Google"}
+              </button>
+              {linkError && <p className="text-xs text-clay mt-1.5">{linkError}</p>}
+            </>
+          )}
+        </div>
 
         <label className="text-xs text-soft mb-1 block">Nombre para mostrar (opcional)</label>
         <input
