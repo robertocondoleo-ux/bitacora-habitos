@@ -451,12 +451,22 @@ create policy "profiles: buscar especialistas" on profiles
 
 -- 7) La cuenta administradora ve y aprueba/rechaza solicitudes de rol
 --    nutricionista de cualquier cuenta.
+--    OJO: is_admin se chequea con una función security definer, NO con
+--    una subconsulta directa a "profiles" — si no, Postgres tira
+--    "infinite recursion detected in policy for relation profiles" y
+--    cualquier lectura del perfil falla en silencio.
+create or replace function public.is_admin_user()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+$$;
+
 create policy "profiles: admin ve todos" on profiles
-  for select using (
-    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
-  );
+  for select using (public.is_admin_user());
 
 create policy "profiles: admin actualiza roles" on profiles
-  for update using (
-    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
-  );
+  for update using (public.is_admin_user());

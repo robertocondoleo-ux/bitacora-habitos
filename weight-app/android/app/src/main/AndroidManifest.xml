@@ -33,6 +33,19 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Widget de "pasos de hoy" para la pantalla principal del celu -->
+        <receiver
+            android:name=".StepsWidgetProvider"
+            android:exported="false"
+            android:label="Bitácora — Pasos">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/steps_widget_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

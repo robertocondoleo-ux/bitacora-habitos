@@ -14,14 +14,23 @@ update profiles set onboarded = true where onboarded = false;
 -- Marca tu cuenta como administrador (solo vos ves las solicitudes pendientes).
 update profiles set is_admin = true where email = 'roberto.condoleo@gmail.com';
 
+-- OJO: el chequeo de is_admin usa una función security definer, no una
+-- subconsulta directa a "profiles" (eso causaba un loop infinito de
+-- políticas — ver migration_fix_rls_admin.sql).
+create or replace function public.is_admin_user()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+$$;
+
 drop policy if exists "profiles: admin ve todos" on profiles;
 create policy "profiles: admin ve todos" on profiles
-  for select using (
-    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
-  );
+  for select using (public.is_admin_user());
 
 drop policy if exists "profiles: admin actualiza roles" on profiles;
 create policy "profiles: admin actualiza roles" on profiles
-  for update using (
-    exists (select 1 from profiles me where me.id = auth.uid() and me.is_admin = true)
-  );
+  for update using (public.is_admin_user());
