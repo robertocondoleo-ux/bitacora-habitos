@@ -95,8 +95,15 @@ create table if not exists meals (
   date date not null default current_date,
   meal_type text not null, -- desayuno / almuerzo / merienda / cena / snack
   description text not null,
+  photo_url text,
   created_at timestamptz default now()
 );
+
+-- Bucket público para fotos de comidas (cada usuario sube/borra solo
+-- dentro de su propia carpeta, identificada por su user_id).
+insert into storage.buckets (id, name, public)
+values ('meal-photos', 'meal-photos', true)
+on conflict (id) do nothing;
 
 -- Perfil de entrenamiento: objetivos elegidos y días disponibles por semana
 create table if not exists training_profile (
@@ -186,6 +193,14 @@ create policy "daily_wellbeing: propio" on daily_wellbeing
 
 create policy "meals: propio" on meals
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "meal-photos: subir propio" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "meal-photos: borrar propio" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 
 create policy "training_profile: propio" on training_profile
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
